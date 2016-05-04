@@ -242,7 +242,7 @@ bool GetIdenToken( string oneLineString, OneLineToken &oneLineToken, int &index 
 } // GetIdenToken()
 
 bool GetTokenString( string &oneLineString, OneLineToken &oneLineToken, int &index, string &aTokenString ) {
-  PrintNowFunction( "GetTokenString" );
+  // PrintNowFunction( "GetTokenString" );
   string aCharToString;
   while ( index < oneLineString.size() && aCharToString != "\"" ) {
     aCharToString = string();
@@ -376,6 +376,30 @@ Token GetToken() {
 
   return GetToken();
 } // GetToken()
+
+bool Done() {
+  if ( PeekToken().mToken != "Done" )
+    return false;
+  GetToken();
+  if ( PeekToken().mToken != "(" )
+    return false;
+  GetToken();
+  if ( PeekToken().mToken != ")" )
+    return false;
+  GetToken();
+  if ( PeekToken().mToken != ";" )
+    return false;
+
+  return true;
+} // Done()
+
+bool Run() {
+  while ( !Done() ) {
+
+  } // while
+
+  return true;
+} // Run()
 
 int main() {
   string e, testNum;
