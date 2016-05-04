@@ -76,16 +76,10 @@ class Table {
 public:
   vector<string> mTable1; // declare
   vector<string> mTable2; // operator
-  vector<string> mTable3; // void      -> ( params )
-  vector<string> mTable4; // if, while -> ( boolExp )
-  vector<string> mTable5; // else, do  -> { stmt }
 
   Table() {
     mTable1 = GetTable1();
     mTable2 = GetTable2();
-    mTable3 = GetTable3();
-    mTable4 = GetTable4();
-    mTable5 = GetTable5();
   } // Table()
 
 private:
@@ -106,26 +100,6 @@ private:
       table2.push_back( strArray[i] );
     return table2;
   } // GetTable2()
-
-  vector<string> GetTable3() {
-    vector<string> table3;
-    table3.push_back( "void" );
-    return table3;
-  } // GetTable3()
-
-  vector<string> GetTable4() {
-    vector<string> table4;
-    table4.push_back( "if" );
-    table4.push_back( "while" );
-    return table4;
-  } // GetTable4()
-
-  vector<string> GetTable5() {
-    vector<string> table5;
-    table5.push_back( "else" );
-    table5.push_back( "do" );
-    return table5;
-  } // GetTable5()
 }; // class Table
 
 // /////////////////////////////////////////////////////////////////////////////
@@ -376,6 +350,163 @@ Token GetToken() {
 
   return GetToken();
 } // GetToken()
+
+// /////////////////////////////////////////////////////////////////////////////
+//                               sub function                                 //
+// /////////////////////////////////////////////////////////////////////////////
+
+bool VOID() {
+  if ( PeekToken().mToken != "void" )
+    return false;
+  GetToken();
+  return true;
+} // VOID()
+
+bool RETURN() {
+  if ( PeekToken().mToken != "return" )
+    return false;
+  GetToken();
+  return true;
+} // RETURN()
+
+bool IF() {
+  if ( PeekToken().mToken != "if" )
+    return false;
+  GetToken();
+  return true;
+} // IF()
+
+bool ELSE() {
+  if ( PeekToken().mToken != "else" )
+    return false;
+  GetToken();
+  return true;
+} // ELSE()
+
+bool WHILE() {
+  if ( PeekToken().mToken != "while" )
+    return false;
+  GetToken();
+  return true;
+} // WHILE()
+
+bool DO() {
+  if ( PeekToken().mToken != "do" )
+    return false;
+  GetToken();
+  return true;
+} // DO()
+
+// /////////////////////////////////////////////////////////////////////////////
+//                                Definition                                  //
+// /////////////////////////////////////////////////////////////////////////////
+
+bool Identifier() {
+  
+} // Identifier()
+
+
+
+// /////////////////////////////////////////////////////////////////////////////
+//                                User_input                                  //
+// /////////////////////////////////////////////////////////////////////////////
+
+bool Definition() {
+  if ( VOID() ) {
+    if ( !Identifier() )
+      return false;
+    if ( !Function_definition_without_ID() )
+      return false;
+  } // if
+  else if ( Type_specifier() ) {
+    if ( !Identifier() )
+      return false;
+    if ( !Function_definition_or_declarators() )
+      return false;
+  } // else if
+
+  return true;
+} // Definition()
+
+bool Statement() {
+  if ( PeekToken().mToken == ";" ) {
+    GetToken();
+  } // if
+  else if ( Expression() ) {
+    if ( PeekToken.mToken != ";" )
+      return false;
+    GetToken();
+  } // else if
+  else if ( RETURN() ) {
+    if ( Expression() ) // 0 or 1
+      if ( PeekToken().mToken != ";" )
+        return false;
+    if ( PeekToken().mToken != ";" )
+      return false;
+    GetToken();
+  } // else if
+  else if ( Compound_statement() ) {
+    // do nothing
+  } // else if
+  else if ( IF() ) {
+    if ( PeekToken().mToken != "(" )
+      return false;
+    GetToken();
+    if ( !Expression() )
+      return false;
+    if ( PeekToken().mToken != ")" )
+      return false;
+    GetToken();
+    if ( !Statement() )
+      return false;
+    if ( ELSE() ) // 0 or 1
+      if ( !Statement() )
+        return false;
+  } // if
+  else if ( WHILE() ) {
+    if ( PeekToken().mToken != "(" )
+      return false;
+    GetToken();
+    if ( !Expression() )
+      return false;
+    if ( PeekToken().mToken != ")" )
+      return false;
+    GetToken();
+    if ( !Statement() )
+      return false;
+  } // else if
+  else if ( DO() ) {
+    if ( !Statement() )
+      return false;
+    if ( !WHILE() )
+      return false;
+    if ( PeekToken().mToken != "(" )
+      return false;
+    GetToken();
+    if ( !Expression() )
+      return false;
+    if ( PeekToken().mToken != ")" )
+      return false;
+    GetToken();
+    if ( PeekToken().mToken != ";" )
+      return false;
+    GetToken();
+  } // else if
+
+  return true;
+} // Statement()
+
+bool User_input() {
+  if ( !Definition() && !Statement() )
+    return false;
+  while ( Definition() || Statement() ) ;
+
+  return true;
+} // user_input()
+
+// /////////////////////////////////////////////////////////////////////////////
+//                                   start                                    //
+// /////////////////////////////////////////////////////////////////////////////
 
 bool Done() {
   if ( PeekToken().mToken != "Done" )
