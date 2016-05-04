@@ -76,10 +76,15 @@ class Table {
 public:
   vector<string> mTable1; // declare
   vector<string> mTable2; // operator
+  vector<string> mTable3;
+  // void      -> ( params )
+  // if, while -> ( boolExp )
+  // else, do  -> { stmt }
 
   Table() {
     mTable1 = GetTable1();
     mTable2 = GetTable2();
+    mTable3 = GetTable3();
   } // Table()
 
 private:
@@ -100,6 +105,14 @@ private:
       table2.push_back( strArray[i] );
     return table2;
   } // GetTable2()
+
+  vector<string> GetTable3() {
+    string strArray[] = { "void", "if", "while", "else", "do" };
+    vector<string> table3;
+    for ( int i = 0 ; i < 5 ; i++ )
+      table3.push_back( strArray[i] );
+    return table3;
+  } // GetTable3()
 }; // class Table
 
 // /////////////////////////////////////////////////////////////////////////////
@@ -115,12 +128,26 @@ Index gIndex; // index of gAllLineToken
 //                                 IsOO                                       //
 // /////////////////////////////////////////////////////////////////////////////
 
+bool IsTable1( string str ) {
+  for ( int i = 0 ; i < gTable.mTable1.size() ; i++ )
+    if ( str == gTable.mTable1[i] )
+      return true;
+  return false;
+} // IsTable1()
+
 bool IsTable2( string str ) {
   for ( int i = 0 ; i < gTable.mTable2.size() ; i++ )
     if ( str == gTable.mTable2[i] )
       return true;
   return false;
 } // IsTable2()
+
+bool IsTable3( string str ) {
+  for ( int i = 0 ; i < gTable.mTable3.size() ; i++ )
+    if ( str == gTable.mTable3[i] )
+      return true;
+  return false;
+} // IsTable3()
 
 bool IsANumChar( string charStr ) {
   if ( charStr.size() == 1 && charStr >= "0" && charStr <= "9" )
@@ -402,7 +429,11 @@ bool DO() {
 // /////////////////////////////////////////////////////////////////////////////
 
 bool Identifier() {
-  
+  string mToken = PeekToken().mToken;
+  if ( IsTable1( mToken ) || IsTable2( mToken ) || IsTable3( mToken ) )
+    return false;
+  GetToken();
+  return true;
 } // Identifier()
 
 
