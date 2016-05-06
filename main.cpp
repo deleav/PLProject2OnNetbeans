@@ -53,20 +53,30 @@ public:
   } // Index
 }; // class Index
 
-class Identifier {
-public:
-  string mToken;
-  float mValue;
+class FunctionToken {
+  Token mToken;
+  vector<Token> mFunctionToken;
 
-  Identifier() {
-    mValue = 0;
-  } // Identifier()
-
-  Identifier( string token, float value ) {
+  FunctionToken( Token token, vector<Token> functionToken ) {
     mToken = token;
-    mValue = value;
-  } // Identifier()
-}; // class Identifier
+    mFunctionToken = functionToken;
+  } // FunctionToken()
+}; // class FunctionToken
+
+// class Identifier {
+// public:
+//   string mToken;
+//   float mValue;
+//
+//   Identifier() {
+//     mValue = 0;
+//   } // Identifier()
+//
+//   Identifier( string token, float value ) {
+//     mToken = token;
+//     mValue = value;
+//   } // Identifier()
+// }; // class Identifier
 
 class Table {
 public:
@@ -116,8 +126,11 @@ private:
 // /////////////////////////////////////////////////////////////////////////////
 
 typedef vector<Token> OneLineToken;
+Token gIdent;
+OneLineToken gIdents;
+vector<OneLineToken> gAllIdents;
 vector<OneLineToken> gAllLineToken;
-vector<OneLineToken> gAllFunctionToken;
+vector<FunctionToken> gAllFunctionToken;
 Table gTable;
 Index gIndex; // index of gAllLineToken
 
@@ -179,6 +192,14 @@ void PrintNowFunction( string str ) {
   cout << "now in " << str << endl;
 } // PrintNowFunction()
 
+void PrintUnexpectedUndeclaredToken( string str ) {
+  cout << "line " << gAllLineToken.size() << " : syntax error when token is '" + str + "'" << endl;
+} // PrintUnexpectedUndeclaredToken()
+
+void PrintUnrecognizedToken( string str ) {
+  cout << "line " << gAllLineToken.size() + 1 << " : syntax error when input char is '" + str + "'" << endl;
+} // PrintUnrecognizedToken()
+
 // /////////////////////////////////////////////////////////////////////////////
 //                                GetToken                                    //
 // /////////////////////////////////////////////////////////////////////////////
@@ -186,7 +207,7 @@ void PrintNowFunction( string str ) {
 void GetOneLineString( string &oneLineString ) {
   // PrintNowFunction( "GetOneLineString" );
   char *str1 = new char[ 100 ];
-  cout << "> ";
+  // cout << "> ";
   cin.getline( str1, 100 );
   oneLineString = str1;
   oneLineString += "\n";
@@ -298,8 +319,7 @@ bool SymbolOrRecognizedToken( string oneLineString, OneLineToken &oneLineToken, 
     } // if
   } // else if
 
-  // PrintUnrecognizedToken( aCharToString );
-  cout << "SymbolOrRecognizedToken error";
+  PrintUnrecognizedToken( aCharToString );
   return false;
 } // SymbolOrRecognizedToken()
 
@@ -397,7 +417,22 @@ bool Basic_expression();
 bool Rest_of_maybe_logical_OR_exp();
 bool Sign();
 
+bool PushFunctionToken( string functionNameToken, Index index )  {
+  OneLineToken functionToken;
+  int x = index.mX, y = index.mY;
+  for ( int i = x ; i < gIndex.mX ; i++ ) {
+    for ( int j = y ; j < gAllLineToken[i].size() ; j++ )
+      functionToken.push_back( gAllLineToken[i][j] );
+    y = 0;
+  } // for
+  for ( int j = 0 ; j < gIndex.mY ; j++ )
+    functionToken.push_back( gAllLineToken[gIndex.mX][j] );
+  FunctionToken function = FunctionToken( functionNameToken, functionToken );
+  gAllFunctionToken.push_back( function );
+} // PushFunctionToken()
+
 bool VOID() {
+  PrintNowFunction( "VOID" );
   if ( PeekToken().mToken != "void" )
     return false;
   GetToken();
@@ -405,6 +440,7 @@ bool VOID() {
 } // VOID()
 
 bool RETURN() {
+  PrintNowFunction( "RETURN" );
   if ( PeekToken().mToken != "return" )
     return false;
   GetToken();
@@ -412,6 +448,7 @@ bool RETURN() {
 } // RETURN()
 
 bool IF() {
+  PrintNowFunction( "IF" );
   if ( PeekToken().mToken != "if" )
     return false;
   GetToken();
@@ -419,6 +456,7 @@ bool IF() {
 } // IF()
 
 bool ELSE() {
+  PrintNowFunction( "ELSE" );
   if ( PeekToken().mToken != "else" )
     return false;
   GetToken();
@@ -426,6 +464,7 @@ bool ELSE() {
 } // ELSE()
 
 bool WHILE() {
+  PrintNowFunction( "WHILE" );
   if ( PeekToken().mToken != "while" )
     return false;
   GetToken();
@@ -433,6 +472,7 @@ bool WHILE() {
 } // WHILE()
 
 bool DO() {
+  PrintNowFunction( "DO" );
   if ( PeekToken().mToken != "do" )
     return false;
   GetToken();
@@ -440,6 +480,7 @@ bool DO() {
 } // DO()
 
 bool PP() {
+  PrintNowFunction( "PP" );
   if ( PeekToken().mToken != "++" )
     return false;
   GetToken();
@@ -447,6 +488,7 @@ bool PP() {
 } // PP()
 
 bool MM() {
+  PrintNowFunction( "MM" );
   if ( PeekToken().mToken != "--" )
     return false;
   GetToken();
@@ -454,6 +496,7 @@ bool MM() {
 } // MM()
 
 bool TE() {
+  PrintNowFunction( "TE" );
   if ( PeekToken().mToken != "*=" )
     return false;
   GetToken();
@@ -461,6 +504,7 @@ bool TE() {
 } // TE()
 
 bool DE() {
+  PrintNowFunction( "DE" );
   if ( PeekToken().mToken != "/=" )
     return false;
   GetToken();
@@ -468,6 +512,7 @@ bool DE() {
 } // DE()
 
 bool RE() {
+  PrintNowFunction( "RE" );
   if ( PeekToken().mToken != "%=" )
     return false;
   GetToken();
@@ -475,6 +520,7 @@ bool RE() {
 } // RE()
 
 bool PE() {
+  PrintNowFunction( "PE" );
   if ( PeekToken().mToken != "+=" )
     return false;
   GetToken();
@@ -482,6 +528,7 @@ bool PE() {
 } // PE()
 
 bool ME() {
+  PrintNowFunction( "ME" );
   if ( PeekToken().mToken != "-=" )
     return false;
   GetToken();
@@ -489,6 +536,7 @@ bool ME() {
 } // ME()
 
 bool AND() {
+  PrintNowFunction( "AND" );
   if ( PeekToken().mToken != "&&" )
     return false;
   GetToken();
@@ -496,6 +544,7 @@ bool AND() {
 } // AND()
 
 bool OR() {
+  PrintNowFunction( "OR" );
   if ( PeekToken().mToken != "||" )
     return false;
   GetToken();
@@ -503,6 +552,7 @@ bool OR() {
 } // OR()
 
 bool EQ() {
+  PrintNowFunction( "EQ" );
   if ( PeekToken().mToken != "==" )
     return false;
   GetToken();
@@ -510,6 +560,7 @@ bool EQ() {
 } // EQ()
 
 bool NEQ() {
+  PrintNowFunction( "NEQ" );
   if ( PeekToken().mToken != "!=" )
     return false;
   GetToken();
@@ -517,6 +568,7 @@ bool NEQ() {
 } // NEQ()
 
 bool LE() {
+  PrintNowFunction( "LE" );
   if ( PeekToken().mToken != "<=" )
     return false;
   GetToken();
@@ -524,6 +576,7 @@ bool LE() {
 } // LE()
 
 bool GE() {
+  PrintNowFunction( "GE" );
   if ( PeekToken().mToken != ">=" )
     return false;
   GetToken();
@@ -531,6 +584,7 @@ bool GE() {
 } // GE()
 
 bool LS() {
+  PrintNowFunction( "LS" );
   if ( PeekToken().mToken != "<<" )
     return false;
   GetToken();
@@ -538,6 +592,7 @@ bool LS() {
 } // LS()
 
 bool RS() {
+  PrintNowFunction( "RS" );
   if ( PeekToken().mToken != ">>" )
     return false;
   GetToken();
@@ -549,6 +604,7 @@ bool RS() {
 // /////////////////////////////////////////////////////////////////////////////
 
 bool Declaration() {
+  PrintNowFunction( "Declaration" );
   if ( !Type_specifier() )
     return false;
   if ( !Identifier() )
@@ -564,6 +620,7 @@ bool Declaration() {
 // /////////////////////////////////////////////////////////////////////////////
 
 bool Rest_of_declarators() {
+  PrintNowFunction( "Rest_of_declarators" );
   if ( PeekToken().mToken == "[" ) {
     GetToken();
     if ( !Constant() )
@@ -587,9 +644,12 @@ bool Rest_of_declarators() {
     } // if
   } // while
 
+  cout << PeekToken().mToken << endl;
   if ( PeekToken().mToken != ";" )
     return false;
+  GetToken();
 
+  cout << "Rest_of_declarators Success" << endl;
   return true;
 } // Rest_of_declarators()
 
@@ -598,6 +658,7 @@ bool Rest_of_declarators() {
 // /////////////////////////////////////////////////////////////////////////////
 
 bool Constant() {
+  PrintNowFunction( "Constant" );
   string mToken = PeekToken().mToken, aCharToString = "";
   aCharToString += mToken[0];
   if ( IsEnChar( aCharToString ) || IsTable1( mToken ) || IsTable2( mToken ) || IsTable3( mToken ) )
@@ -611,6 +672,7 @@ bool Constant() {
 // /////////////////////////////////////////////////////////////////////////////
 
 bool Formal_parameter_list() {
+  PrintNowFunction( "Formal_parameter_list" );
   if ( !Type_specifier() )
     return false;
   if ( PeekToken().mToken == "&" )
@@ -635,6 +697,7 @@ bool Formal_parameter_list() {
 } // Formal_parameter_list()
 
 bool Compound_statement() {
+  PrintNowFunction( "Compound_statement" );
   if ( PeekToken().mToken != "{" )
     return false;
   GetToken();
@@ -644,6 +707,7 @@ bool Compound_statement() {
 
   if ( PeekToken().mToken != "}" )
     return false;
+  GetToken();
 
   return true;
 } // Compound_statement()
@@ -653,15 +717,17 @@ bool Compound_statement() {
 // /////////////////////////////////////////////////////////////////////////////
 
 bool Identifier() {
+  PrintNowFunction( "Identifier" );
   string mToken = PeekToken().mToken, aCharToString = "";
   aCharToString += mToken[0];
   if ( !IsEnChar( aCharToString ) || IsTable1( mToken ) || IsTable2( mToken ) || IsTable3( mToken ) )
     return false;
-  GetToken();
+  gIdent = GetToken();
   return true;
 } // Identifier()
 
 bool Function_definition_without_ID() {
+  PrintNowFunction( "Function_definition_without_ID" );
   if ( PeekToken().mToken != "(" )
     return false;
   GetToken();
@@ -678,6 +744,7 @@ bool Function_definition_without_ID() {
 } // Function_definition_without_ID()
 
 bool Type_specifier() {
+  PrintNowFunction( "Type_specifier" );
   if ( !IsTable1( PeekToken().mToken ) )
     return false;
   GetToken();
@@ -686,9 +753,11 @@ bool Type_specifier() {
 } // Type_specifier()
 
 bool Function_definition_or_declarators() {
-  if ( !Function_definition_without_ID() && ! !Rest_of_declarators() )
+  PrintNowFunction( "Function_definition_or_declarators" );
+  if ( !Function_definition_without_ID() && !Rest_of_declarators() )
     return false;
 
+  cout << "Function_definition_or_declarators Success" << endl;
   return true;
 } // Function_definition_or_declarators()
 
@@ -698,6 +767,7 @@ bool Function_definition_or_declarators() {
 // /////////////////////////////////////////////////////////////////////////////
 
 bool Rest_of_non_comma_expression() {
+  PrintNowFunction( "Rest_of_non_comma_expression" );
   if ( PeekToken().mToken != "?" )
     return false;
   GetToken();
@@ -720,6 +790,7 @@ bool Rest_of_non_comma_expression() {
 // /////////////////////////////////////////////////////////////////////////////
 
 bool Non_comma_expression() {
+  PrintNowFunction( "Non_comma_expression" );
   if ( !Basic_expression() )
     return false;
   if ( Rest_of_non_comma_expression() ) {
@@ -734,6 +805,7 @@ bool Non_comma_expression() {
 // /////////////////////////////////////////////////////////////////////////////
 
 bool Actual_parameter_list() {
+  PrintNowFunction( "Actual_parameter_list" );
   if ( !Non_comma_expression() )
     return false;
   while ( PeekToken().mToken == "," ) {
@@ -746,7 +818,10 @@ bool Actual_parameter_list() {
 } // Actual_parameter_list()
 
 bool Assignment_operator() {
-  if ( PeekToken().mToken != "=" && !TE() && !DE() && !RE() && !PE() && !ME() )
+  PrintNowFunction( "Assignment_operator" );
+  if ( PeekToken().mToken == "=" )
+    GetToken();
+  else if ( !TE() && !DE() && !RE() && !PE() && !ME() )
     return false;
   return true;
 } // Assignment_operator()
@@ -756,6 +831,7 @@ bool Assignment_operator() {
 // /////////////////////////////////////////////////////////////////////////////
 
 bool Rest_of_Identifier_started_signed_basic_exp() {
+  PrintNowFunction( "Rest_of_Identifier_started_signed_basic_exp" );
   if ( PeekToken().mToken == "[" ) {
     if ( !Expression() )
       return false;
@@ -800,6 +876,7 @@ bool Rest_of_Identifier_started_signed_basic_exp() {
 // /////////////////////////////////////////////////////////////////////////////
 
 bool Rest_of_Identifier_started_unary_exp() {
+  PrintNowFunction( "Rest_of_Identifier_started_unary_exp" );
   if ( PeekToken().mToken == "(" ) {
     GetToken();
     if ( Actual_parameter_list() ) {
@@ -833,6 +910,7 @@ bool Rest_of_Identifier_started_unary_exp() {
 // /////////////////////////////////////////////////////////////////////////////
 
 bool Signed_unary_exp() {
+  PrintNowFunction( "Signed_unary_exp" );
   if ( Identifier() ) {
     if ( Rest_of_Identifier_started_unary_exp() ) {
       // do nothing
@@ -859,6 +937,7 @@ bool Signed_unary_exp() {
 // /////////////////////////////////////////////////////////////////////////////
 
 bool Unary_exp() {
+  PrintNowFunction( "Unary_exp" );
   if ( Sign() ) {
     while ( Sign() ) {
       // do nothing
@@ -892,6 +971,7 @@ bool Unary_exp() {
 // /////////////////////////////////////////////////////////////////////////////
 
 bool Rest_of_maybe_mult_exp() {
+  PrintNowFunction( "Rest_of_maybe_mult_exp" );
   while ( PeekToken().mToken == "*" || PeekToken().mToken == "/" || PeekToken().mToken == "%" )
     if ( !Unary_exp() )
       return false;
@@ -900,6 +980,7 @@ bool Rest_of_maybe_mult_exp() {
 } // Rest_of_maybe_mult_exp()
 
 bool Maybe_mult_exp() {
+  PrintNowFunction( "Maybe_mult_exp" );
   if ( !Unary_exp() )
     return false;
   if ( !Rest_of_maybe_mult_exp() )
@@ -912,6 +993,7 @@ bool Maybe_mult_exp() {
 // /////////////////////////////////////////////////////////////////////////////
 
 bool Rest_of_maybe_additive_exp() {
+  PrintNowFunction( "Rest_of_maybe_additive_exp" );
   if ( !Rest_of_maybe_mult_exp() )
     return false;
   while ( PeekToken().mToken == "+" || PeekToken().mToken == "-" ) {
@@ -924,6 +1006,7 @@ bool Rest_of_maybe_additive_exp() {
 } // Rest_of_maybe_additive_exp()
 
 bool Maybe_additive_exp() {
+  PrintNowFunction( "Maybe_additive_exp" );
   if ( !Maybe_mult_exp() )
     return false;
   while ( PeekToken().mToken == "+" || PeekToken().mToken == "-" ) {
@@ -940,6 +1023,7 @@ bool Maybe_additive_exp() {
 // /////////////////////////////////////////////////////////////////////////////
 
 bool Rest_of_maybe_shift_exp() {
+  PrintNowFunction( "Rest_of_maybe_shift_exp" );
   if ( !Rest_of_maybe_additive_exp() )
     return false;
   while ( LS() || RS() )
@@ -949,6 +1033,7 @@ bool Rest_of_maybe_shift_exp() {
 } // Rest_of_maybe_shift_exp()
 
 bool Maybe_shift_exp() {
+  PrintNowFunction( "Maybe_shift_exp" );
   if ( !Maybe_additive_exp() )
     return false;
   while ( LS() || RS() )
@@ -962,6 +1047,7 @@ bool Maybe_shift_exp() {
 // /////////////////////////////////////////////////////////////////////////////
 
 bool Rest_of_maybe_relational_exp() {
+  PrintNowFunction( "Rest_of_maybe_relational_exp" );
   if ( !Rest_of_maybe_shift_exp() )
     return false;
   while ( PeekToken().mToken == "<" || PeekToken().mToken == ">" || LE() || GE() ) {
@@ -975,6 +1061,7 @@ bool Rest_of_maybe_relational_exp() {
 } // Rest_of_maybe_relational_exp()
 
 bool Maybe_relational_exp() {
+  PrintNowFunction( "Maybe_relational_exp" );
   if ( Maybe_shift_exp() )
     return false;
   while ( PeekToken().mToken == "<" || PeekToken().mToken == ">" || LE() || GE() ) {
@@ -992,6 +1079,7 @@ bool Maybe_relational_exp() {
 // /////////////////////////////////////////////////////////////////////////////
 
 bool Rest_of_maybe_equality_exp() {
+  PrintNowFunction( "Rest_of_maybe_equality_exp" );
   if ( !Rest_of_maybe_relational_exp() )
     return false;
   while ( EQ() || NEQ() )
@@ -1001,6 +1089,7 @@ bool Rest_of_maybe_equality_exp() {
 } // Rest_of_maybe_equality_exp()
 
 bool Maybe_equality_exp() {
+  PrintNowFunction( "Maybe_equality_exp" );
   if ( !Maybe_relational_exp() )
     return false;
   while ( EQ() || NEQ() )
@@ -1014,6 +1103,7 @@ bool Maybe_equality_exp() {
 // /////////////////////////////////////////////////////////////////////////////
 
 bool Rest_of_maybe_bit_AND_exp() {
+  PrintNowFunction( "Rest_of_maybe_bit_AND_exp" );
   if ( !Rest_of_maybe_equality_exp() )
     return false;
   while ( PeekToken().mToken == "&" ) {
@@ -1026,6 +1116,7 @@ bool Rest_of_maybe_bit_AND_exp() {
 } // Rest_of_maybe_bit_AND_exp()
 
 bool Maybe_bit_AND_exp() {
+  PrintNowFunction( "Maybe_bit_AND_exp" );
   if ( !Maybe_equality_exp() )
     return false;
   while ( PeekToken().mToken == "&" ) {
@@ -1042,6 +1133,7 @@ bool Maybe_bit_AND_exp() {
 // /////////////////////////////////////////////////////////////////////////////
 
 bool Rest_of_maybe_bit_ex_OR_exp() {
+  PrintNowFunction( "Rest_of_maybe_bit_ex_OR_exp" );
   if ( !Rest_of_maybe_bit_AND_exp() )
     return false;
   while ( PeekToken().mToken == "^" ) {
@@ -1054,6 +1146,7 @@ bool Rest_of_maybe_bit_ex_OR_exp() {
 } // Rest_of_maybe_bit_ex_OR_exp()
 
 bool Maybe_bit_ex_OR_exp() {
+  PrintNowFunction( "Maybe_bit_ex_OR_exp" );
   if ( !Maybe_bit_AND_exp() )
     return false;
   while ( PeekToken().mToken == "^" ) {
@@ -1070,6 +1163,7 @@ bool Maybe_bit_ex_OR_exp() {
 // /////////////////////////////////////////////////////////////////////////////
 
 bool Rest_of_maybe_bit_OR_exp() {
+  PrintNowFunction( "Rest_of_maybe_bit_OR_exp" );
   if ( !Rest_of_maybe_bit_ex_OR_exp() )
     return false;
   while ( PeekToken().mToken == "|" ) {
@@ -1082,6 +1176,7 @@ bool Rest_of_maybe_bit_OR_exp() {
 } // Rest_of_maybe_bit_OR_exp()
 
 bool Maybe_bit_OR_exp() {
+  PrintNowFunction( "Maybe_bit_OR_exp" );
   if ( !Maybe_bit_ex_OR_exp() )
     return false;
   while ( PeekToken().mToken == "|" ) {
@@ -1098,6 +1193,7 @@ bool Maybe_bit_OR_exp() {
 // /////////////////////////////////////////////////////////////////////////////
 
 bool Rest_of_maybe_logical_AND_exp() {
+  PrintNowFunction( "Rest_of_maybe_logical_AND_exp" );
   if ( !Rest_of_maybe_bit_OR_exp() )
     return false;
   while ( AND() )
@@ -1107,6 +1203,7 @@ bool Rest_of_maybe_logical_AND_exp() {
 } // Rest_of_maybe_logical_AND_exp()
 
 bool Maybe_logical_AND_exp() {
+  PrintNowFunction( "Maybe_logical_AND_exp" );
   if ( !Maybe_bit_OR_exp() )
     return false;
   while ( AND() )
@@ -1120,6 +1217,7 @@ bool Maybe_logical_AND_exp() {
 // /////////////////////////////////////////////////////////////////////////////
 
 bool Rest_of_Identifier_started_basic_exp() {
+  PrintNowFunction( "Rest_of_Identifier_started_basic_exp" );
   if ( PeekToken().mToken == "[" ) { // 1
     GetToken();
     if ( !Expression() )
@@ -1171,6 +1269,7 @@ bool Rest_of_Identifier_started_basic_exp() {
 } // Rest_of_Identifier_started_basic_exp()
 
 bool Rest_of_PPMM_Identifier_started_basic_exp() {
+  PrintNowFunction( "Rest_of_PPMM_Identifier_started_basic_exp" );
   if ( PeekToken().mToken == "[" ) {
     GetToken();
     if ( !Expression() )
@@ -1187,6 +1286,7 @@ bool Rest_of_PPMM_Identifier_started_basic_exp() {
 } // Rest_of_PPMM_Identifier_started_basic_exp()
 
 bool Signed_basic_expression() {
+  PrintNowFunction( "Signed_basic_expression" );
   if ( Identifier() ) {
     if ( !Rest_of_Identifier_started_signed_basic_exp() )
       return false;
@@ -1212,12 +1312,15 @@ bool Signed_basic_expression() {
 } // Signed_basic_expression()
 
 bool Sign() {
+  PrintNowFunction( "Sign" );
   if ( PeekToken().mToken != "+" && PeekToken().mToken != "-" && PeekToken().mToken != "!" )
     return false;
+  GetToken();
   return true;
 } // Sign()
 
 bool Rest_of_maybe_logical_OR_exp() {
+  PrintNowFunction( "Rest_of_maybe_logical_OR_exp" );
   if ( !Rest_of_maybe_logical_AND_exp() )
     return false;
   while ( OR() ) {
@@ -1233,6 +1336,7 @@ bool Rest_of_maybe_logical_OR_exp() {
 // /////////////////////////////////////////////////////////////////////////////
 
 bool Basic_expression() {
+  PrintNowFunction( "Basic_expression" );
   if ( Identifier() ) {
     if ( !Rest_of_Identifier_started_basic_exp() )
       return false;
@@ -1272,6 +1376,7 @@ bool Basic_expression() {
 } // Basic_expression()
 
 bool Rest_of_expression() {
+  PrintNowFunction( "Rest_of_expression" );
   if ( PeekToken().mToken == "," ) {
     GetToken();
     if ( !Basic_expression() )
@@ -1304,6 +1409,7 @@ bool Rest_of_expression() {
 // /////////////////////////////////////////////////////////////////////////////
 
 bool Expression() {
+  PrintNowFunction( "Expression" );
   if ( !Basic_expression() )
     return false;
   if ( Rest_of_expression() ) {
@@ -1318,17 +1424,22 @@ bool Expression() {
 // /////////////////////////////////////////////////////////////////////////////
 
 bool Definition() {
+  PrintNowFunction( "Definition" );
+  Index indexOfFunctionStart = gIndex;
   if ( VOID() ) {
     if ( !Identifier() )
       return false;
     if ( !Function_definition_without_ID() )
       return false;
+    PushFunctionToken( gIdent, indexOfFunctionStart );
   } // if
   else if ( Type_specifier() ) {
     if ( !Identifier() )
       return false;
     if ( !Function_definition_or_declarators() )
       return false;
+    gIdents.push_back( gIdent );
+    cout << "Definition of " << gIdent.mToken << " entered ..." << endl;
   } // else if
   else
     return false;
@@ -1337,6 +1448,7 @@ bool Definition() {
 } // Definition()
 
 bool Statement() {
+  PrintNowFunction( "Statement" );
   if ( PeekToken().mToken == ";" ) {
     GetToken();
   } // if
@@ -1403,22 +1515,16 @@ bool Statement() {
   else
     return false;
 
+  cout << "Statement executed ..." << endl;
   return true;
 } // Statement()
-
-bool User_input() {
-  if ( !Definition() && !Statement() )
-    return false;
-  while ( Definition() || Statement() ) ;
-
-  return true;
-} // user_input()
 
 // /////////////////////////////////////////////////////////////////////////////
 //                                   start                                    //
 // /////////////////////////////////////////////////////////////////////////////
 
 bool Done() {
+  PrintNowFunction( "Done" );
   if ( PeekToken().mToken != "Done" )
     return false;
   GetToken();
@@ -1431,12 +1537,22 @@ bool Done() {
   if ( PeekToken().mToken != ";" )
     return false;
 
+  cout << "Our-C exited ...";
   return true;
 } // Done()
 
 bool Run() {
+  PrintNowFunction( "Run" );
+  cout << "> ";
   while ( !Done() ) {
+    if ( Definition() || Statement() ) {
+      // do nothing
+    } // if
+    else {
+      // do nothing
+    } // else
 
+    cout << "> ";
   } // while
 
   return true;
@@ -1450,9 +1566,10 @@ int main() {
   testNum = str1;
   uTestNum  = atof( testNum.c_str() );
 
-  while ( PeekToken().mToken != "Done" ) {
-    cout << GetToken().mToken << endl;
-  } // while
+  Run();
+  // while ( PeekToken().mToken != "Done" ) {
+  //   cout << GetToken().mToken << endl;
+  // } // while
 
   return 0;
 } // main()
