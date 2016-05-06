@@ -387,6 +387,16 @@ Token GetToken() {
 //                               sub function                                 //
 // /////////////////////////////////////////////////////////////////////////////
 
+bool Type_specifier();
+bool Identifier();
+bool Rest_of_declarators();
+bool Constant();
+bool Statement();
+bool Expression();
+bool Basic_expression();
+bool Rest_of_maybe_logical_OR_exp();
+bool Sign();
+
 bool VOID() {
   if ( PeekToken().mToken != "void" )
     return false;
@@ -478,6 +488,62 @@ bool ME() {
   return true;
 } // ME()
 
+bool AND() {
+  if ( PeekToken().mToken != "&&" )
+    return false;
+  GetToken();
+  return true;
+} // AND()
+
+bool OR() {
+  if ( PeekToken().mToken != "||" )
+    return false;
+  GetToken();
+  return true;
+} // OR()
+
+bool EQ() {
+  if ( PeekToken().mToken != "==" )
+    return false;
+  GetToken();
+  return true;
+} // EQ()
+
+bool NEQ() {
+  if ( PeekToken().mToken != "!=" )
+    return false;
+  GetToken();
+  return true;
+} // NEQ()
+
+bool LE() {
+  if ( PeekToken().mToken != "<=" )
+    return false;
+  GetToken();
+  return true;
+} // LE()
+
+bool GE() {
+  if ( PeekToken().mToken != ">=" )
+    return false;
+  GetToken();
+  return true;
+} // GE()
+
+bool LS() {
+  if ( PeekToken().mToken != "<<" )
+    return false;
+  GetToken();
+  return true;
+} // LS()
+
+bool RS() {
+  if ( PeekToken().mToken != ">>" )
+    return false;
+  GetToken();
+  return true;
+} // RS()
+
 // /////////////////////////////////////////////////////////////////////////////
 //                              compound_statement                            //
 // /////////////////////////////////////////////////////////////////////////////
@@ -545,7 +611,7 @@ bool Constant() {
 // /////////////////////////////////////////////////////////////////////////////
 
 bool Formal_parameter_list() {
-  if ( !Type_specifier )
+  if ( !Type_specifier() )
     return false;
   if ( PeekToken().mToken == "&" )
     GetToken();
@@ -612,7 +678,7 @@ bool Function_definition_without_ID() {
 } // Function_definition_without_ID()
 
 bool Type_specifier() {
-  if ( !IsTable1( PeekToken.mToken ) )
+  if ( !IsTable1( PeekToken().mToken ) )
     return false;
   GetToken();
 
@@ -681,7 +747,7 @@ bool Actual_parameter_list() {
 
 bool Assignment_operator() {
   if ( PeekToken().mToken != "=" && !TE() && !DE() && !RE() && !PE() && !ME() )
-    return false
+    return false;
   return true;
 } // Assignment_operator()
 
@@ -1037,7 +1103,7 @@ bool Rest_of_maybe_logical_AND_exp() {
   while ( AND() )
     if ( !Maybe_bit_OR_exp() )
       return false;
-  return true
+  return true;
 } // Rest_of_maybe_logical_AND_exp()
 
 bool Maybe_logical_AND_exp() {
@@ -1129,11 +1195,11 @@ bool Signed_basic_expression() {
     if ( !Rest_of_maybe_logical_OR_exp() )
       return false;
   } // else if
-  else if ( PeekToken.mToken() == "(" ) {
+  else if ( PeekToken().mToken == "(" ) {
     GetToken();
     if ( !Expression() )
       return false;
-    if ( PeekToken.mToken() != ")" )
+    if ( PeekToken().mToken != ")" )
       return false;
     GetToken();
     if ( !Rest_of_maybe_logical_OR_exp() )
@@ -1275,7 +1341,7 @@ bool Statement() {
     GetToken();
   } // if
   else if ( Expression() ) {
-    if ( PeekToken.mToken != ";" )
+    if ( PeekToken().mToken != ";" )
       return false;
     GetToken();
   } // else if
