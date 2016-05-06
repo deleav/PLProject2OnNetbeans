@@ -18,26 +18,22 @@ public:
   string mToken;
   int mX;
   int mY;
-  bool mIsRecord;
 
   Token() {
     mX = -1;
     mY = -1;
-    mIsRecord = false;
   } // Token()
 
   Token( string str ) {
     mToken = str;
     mX = -1;
     mY = -1;
-    mIsRecord = false;
   } // Token()
 
   Token( string str, int x, int y ) {
     mToken = str;
     mX = x;
     mY = y;
-    mIsRecord = false;
   } // Token()
 }; // class Token
 
@@ -121,6 +117,7 @@ private:
 
 typedef vector<Token> OneLineToken;
 vector<OneLineToken> gAllLineToken;
+vector<OneLineToken> gAllFunctionToken;
 Table gTable;
 Index gIndex; // index of gAllLineToken
 
@@ -343,8 +340,8 @@ bool GetOneLineToken() {
   return true;
 } // GetOneLineToken()
 
-Token PeekToken() {
-  // PrintNowFunction( "PeekToken" );
+Token PeekCurrentToken() {
+  // PrintNowFunction( "PeekCurrentToken" );
   if ( gIndex.mX > -1 )
     if ( gIndex.mX < gAllLineToken.size() && gIndex.mY + 1 < gAllLineToken[gIndex.mX].size() ) {
       // peek next token
@@ -357,11 +354,11 @@ Token PeekToken() {
     gIndex.mY = -1;
   } // if
 
-  return PeekToken();
-} // PeekToken()
+  return PeekCurrentToken();
+} // PeekCurrentToken()
 
-Token GetToken() {
-  // PrintNowFunction( "GetToken" );
+Token GetCurrentToken() {
+  // PrintNowFunction( "GetCurrentToken" );
   if ( gIndex.mX > -1 )
     if ( gIndex.mX < gAllLineToken.size() && gIndex.mY + 1 < gAllLineToken[gIndex.mX].size() ) {
       // peek next token
@@ -375,7 +372,15 @@ Token GetToken() {
     gIndex.mY = -1;
   } // if
 
-  return GetToken();
+  return GetCurrentToken();
+} // GetCurrentToken()
+
+Token PeekToken() {
+  return PeekCurrentToken();
+} // PeekToken()
+
+Token GetToken() {
+  return GetCurrentToken();
 } // GetToken()
 
 // /////////////////////////////////////////////////////////////////////////////
@@ -424,22 +429,826 @@ bool DO() {
   return true;
 } // DO()
 
+bool PP() {
+  if ( PeekToken().mToken != "++" )
+    return false;
+  GetToken();
+  return true;
+} // PP()
+
+bool MM() {
+  if ( PeekToken().mToken != "--" )
+    return false;
+  GetToken();
+  return true;
+} // MM()
+
+bool TE() {
+  if ( PeekToken().mToken != "*=" )
+    return false;
+  GetToken();
+  return true;
+} // TE()
+
+bool DE() {
+  if ( PeekToken().mToken != "/=" )
+    return false;
+  GetToken();
+  return true;
+} // DE()
+
+bool RE() {
+  if ( PeekToken().mToken != "%=" )
+    return false;
+  GetToken();
+  return true;
+} // RE()
+
+bool PE() {
+  if ( PeekToken().mToken != "+=" )
+    return false;
+  GetToken();
+  return true;
+} // PE()
+
+bool ME() {
+  if ( PeekToken().mToken != "-=" )
+    return false;
+  GetToken();
+  return true;
+} // ME()
+
 // /////////////////////////////////////////////////////////////////////////////
-//                                Definition                                  //
+//                              compound_statement                            //
+// /////////////////////////////////////////////////////////////////////////////
+
+bool Declaration() {
+  if ( !Type_specifier() )
+    return false;
+  if ( !Identifier() )
+    return false;
+  if ( !Rest_of_declarators() )
+    return false;
+
+  return true;
+} // Declaration()
+
+// /////////////////////////////////////////////////////////////////////////////
+//                      function_definition_or_declarators                    //
+// /////////////////////////////////////////////////////////////////////////////
+
+bool Rest_of_declarators() {
+  if ( PeekToken().mToken == "[" ) {
+    GetToken();
+    if ( !Constant() )
+      return false;
+    if ( PeekToken().mToken != "]" )
+      return false;
+    GetToken();
+  } // if
+
+  while ( PeekToken().mToken == "," ) {
+    GetToken();
+    if ( !Identifier() )
+      return false;
+    if ( PeekToken().mToken == "[" ) {
+      GetToken();
+      if ( !Constant() )
+        return false;
+      if ( PeekToken().mToken != "]" )
+        return false;
+      GetToken();
+    } // if
+  } // while
+
+  if ( PeekToken().mToken != ";" )
+    return false;
+
+  return true;
+} // Rest_of_declarators()
+
+// /////////////////////////////////////////////////////////////////////////////
+//                            formal_parameter_list                           //
+// /////////////////////////////////////////////////////////////////////////////
+
+bool Constant() {
+  string mToken = PeekToken().mToken, aCharToString = "";
+  aCharToString += mToken[0];
+  if ( IsEnChar( aCharToString ) || IsTable1( mToken ) || IsTable2( mToken ) || IsTable3( mToken ) )
+    return false;
+  GetToken();
+  return true;
+} // Constant()
+
+// /////////////////////////////////////////////////////////////////////////////
+//                        function_definition_without_ID                      //
+// /////////////////////////////////////////////////////////////////////////////
+
+bool Formal_parameter_list() {
+  if ( !Type_specifier )
+    return false;
+  if ( PeekToken().mToken == "&" )
+    GetToken();
+  if ( !Identifier() )
+    return false;
+  if ( PeekToken().mToken == "[" ) {
+    GetToken();
+    if ( !Constant() )
+      return false;
+    if ( PeekToken().mToken != "]" )
+      return false;
+    GetToken();
+  } // if
+
+  if ( PeekToken().mToken == "," ) {
+    GetToken();
+    return Formal_parameter_list();
+  } // if
+
+  return true;
+} // Formal_parameter_list()
+
+bool Compound_statement() {
+  if ( PeekToken().mToken != "{" )
+    return false;
+  GetToken();
+  if ( Declaration() || Statement() ) {
+    // do nothing
+  } // if
+
+  if ( PeekToken().mToken != "}" )
+    return false;
+
+  return true;
+} // Compound_statement()
+
+// /////////////////////////////////////////////////////////////////////////////
+//                                definition                                  //
 // /////////////////////////////////////////////////////////////////////////////
 
 bool Identifier() {
-  string mToken = PeekToken().mToken;
-  if ( IsTable1( mToken ) || IsTable2( mToken ) || IsTable3( mToken ) )
+  string mToken = PeekToken().mToken, aCharToString = "";
+  aCharToString += mToken[0];
+  if ( !IsEnChar( aCharToString ) || IsTable1( mToken ) || IsTable2( mToken ) || IsTable3( mToken ) )
     return false;
   GetToken();
   return true;
 } // Identifier()
 
+bool Function_definition_without_ID() {
+  if ( PeekToken().mToken != "(" )
+    return false;
+  GetToken();
+  if ( VOID() || Formal_parameter_list() ) {
+    // do nothing
+  } // if
+  if ( PeekToken().mToken != ")" )
+    return false;
+  GetToken();
+  if ( !Compound_statement() )
+    return false;
+
+  return true;
+} // Function_definition_without_ID()
+
+bool Type_specifier() {
+  if ( !IsTable1( PeekToken.mToken ) )
+    return false;
+  GetToken();
+
+  return true;
+} // Type_specifier()
+
+bool Function_definition_or_declarators() {
+  if ( !Function_definition_without_ID() && ! !Rest_of_declarators() )
+    return false;
+
+  return true;
+} // Function_definition_or_declarators()
 
 
 // /////////////////////////////////////////////////////////////////////////////
-//                                User_input                                  //
+//                           non_comma_expression                             //
+// /////////////////////////////////////////////////////////////////////////////
+
+bool Rest_of_non_comma_expression() {
+  if ( PeekToken().mToken != "?" )
+    return false;
+  GetToken();
+  if ( !Expression() )
+    return false;
+  if ( PeekToken().mToken != ":" )
+    return false;
+  GetToken();
+  if ( !Basic_expression() )
+    return false;
+  if ( Rest_of_non_comma_expression() ) {
+    // do nothing
+  } // if
+
+  return true;
+} // Rest_of_non_comma_expression()
+
+// /////////////////////////////////////////////////////////////////////////////
+//                           actual_parameter_list                            //
+// /////////////////////////////////////////////////////////////////////////////
+
+bool Non_comma_expression() {
+  if ( !Basic_expression() )
+    return false;
+  if ( Rest_of_non_comma_expression() ) {
+    // do nothing
+  } // if
+
+  return true;
+} // Non_comma_expression()
+
+// /////////////////////////////////////////////////////////////////////////////
+//                    rest_of_Identifier_started_basic_exp                    //
+// /////////////////////////////////////////////////////////////////////////////
+
+bool Actual_parameter_list() {
+  if ( !Non_comma_expression() )
+    return false;
+  while ( PeekToken().mToken == "," ) {
+    GetToken();
+    if ( !Non_comma_expression() )
+      return false;
+  } // while
+
+  return true;
+} // Actual_parameter_list()
+
+bool Assignment_operator() {
+  if ( PeekToken().mToken != "=" && !TE() && !DE() && !RE() && !PE() && !ME() )
+    return false
+  return true;
+} // Assignment_operator()
+
+// /////////////////////////////////////////////////////////////////////////////
+//                          signed_basic_expression                           //
+// /////////////////////////////////////////////////////////////////////////////
+
+bool Rest_of_Identifier_started_signed_basic_exp() {
+  if ( PeekToken().mToken == "[" ) {
+    if ( !Expression() )
+      return false;
+    if ( PeekToken().mToken != "]" )
+      return false;
+    GetToken();
+    if ( PP() || MM() ) {
+      // do nothing
+    } // if
+
+    if ( !Rest_of_maybe_logical_OR_exp() )
+      return false;
+  } // if
+  else if ( PP() || MM() ) {
+    if ( !Rest_of_maybe_logical_OR_exp() )
+      return false;
+  } // else if
+  else if ( Rest_of_maybe_logical_OR_exp() ) {
+    // do nothing
+  } // else if
+  else if ( PeekToken().mToken == "(" ) {
+    GetToken();
+    if ( Actual_parameter_list() ) {
+      // do nothing
+    } // if
+
+    if ( PeekToken().mToken != ")" )
+      return false;
+    GetToken();
+    if ( !Rest_of_maybe_logical_OR_exp() )
+      return false;
+  } // else if
+  else
+    return false;
+
+  return true;
+} // Rest_of_Identifier_started_signed_basic_exp()
+
+
+// /////////////////////////////////////////////////////////////////////////////
+//                               signed_unary_exp                             //
+// /////////////////////////////////////////////////////////////////////////////
+
+bool Rest_of_Identifier_started_unary_exp() {
+  if ( PeekToken().mToken == "(" ) {
+    GetToken();
+    if ( Actual_parameter_list() ) {
+      // do nothing
+    } // if
+
+    if ( PeekToken().mToken != ")" )
+      return false;
+    GetToken();
+  } // if
+  else if ( PeekToken().mToken == "[" ) {
+    GetToken();
+    if ( !Expression() )
+      return false;
+    if ( PeekToken().mToken != "]" )
+      return false;
+    GetToken();
+    if ( PP() || MM() ) {
+      // do nothing()
+    } // if
+  } // else if
+  else if ( PP() || MM() ) {
+    // do nothing
+  } // else if
+
+  return true;
+} // Rest_of_Identifier_started_unary_exp()
+
+// /////////////////////////////////////////////////////////////////////////////
+//                                  unary_exp                                 //
+// /////////////////////////////////////////////////////////////////////////////
+
+bool Signed_unary_exp() {
+  if ( Identifier() ) {
+    if ( Rest_of_Identifier_started_unary_exp() ) {
+      // do nothing
+    } // if
+  } // if
+  else if ( Constant() ) {
+    // do nothing
+  } // else if
+  else if ( PeekToken().mToken == "(" ) {
+    GetToken();
+    if ( !Expression() )
+      return false;
+    if ( PeekToken().mToken != ")" )
+      return false;
+    GetToken();
+  } // else if
+  else
+    return false;
+  return true;
+} // Signed_unary_exp()
+
+// /////////////////////////////////////////////////////////////////////////////
+//                            rest_of_maybe_mult_exp                          //
+// /////////////////////////////////////////////////////////////////////////////
+
+bool Unary_exp() {
+  if ( Sign() ) {
+    while ( Sign() ) {
+      // do nothing
+    } // while
+
+    if ( !Signed_unary_exp() )
+      return false;
+  } // if
+  else if ( Signed_unary_exp() ) {
+    // do nothing
+  } // else if
+  else if ( PP() || MM() ) {
+    if ( !Identifier() )
+      return false;
+    if ( PeekToken().mToken == "[" ) {
+      GetToken();
+      if ( !Expression() )
+        return false;
+      if ( PeekToken().mToken != "]" )
+        return false;
+      GetToken();
+    } // if
+  } // else if
+  else
+    return false;
+  return true;
+} // Unary_exp()
+
+// /////////////////////////////////////////////////////////////////////////////
+//                          rest_of_maybe_additive_exp                        //
+// /////////////////////////////////////////////////////////////////////////////
+
+bool Rest_of_maybe_mult_exp() {
+  while ( PeekToken().mToken == "*" || PeekToken().mToken == "/" || PeekToken().mToken == "%" )
+    if ( !Unary_exp() )
+      return false;
+
+  return true;
+} // Rest_of_maybe_mult_exp()
+
+bool Maybe_mult_exp() {
+  if ( !Unary_exp() )
+    return false;
+  if ( !Rest_of_maybe_mult_exp() )
+    return false;
+  return true;
+} // Maybe_mult_exp()
+
+// /////////////////////////////////////////////////////////////////////////////
+//                           rest_of_maybe_shift_exp                          //
+// /////////////////////////////////////////////////////////////////////////////
+
+bool Rest_of_maybe_additive_exp() {
+  if ( !Rest_of_maybe_mult_exp() )
+    return false;
+  while ( PeekToken().mToken == "+" || PeekToken().mToken == "-" ) {
+    GetToken();
+    if ( !Maybe_mult_exp() )
+      return false;
+  } // while
+
+  return true;
+} // Rest_of_maybe_additive_exp()
+
+bool Maybe_additive_exp() {
+  if ( !Maybe_mult_exp() )
+    return false;
+  while ( PeekToken().mToken == "+" || PeekToken().mToken == "-" ) {
+    GetToken();
+    if ( !Maybe_mult_exp() )
+      return false;
+  } // while
+
+  return true;
+} // Maybe_additive_exp()
+
+// /////////////////////////////////////////////////////////////////////////////
+//                         rest_of_maybe_relational_exp                       //
+// /////////////////////////////////////////////////////////////////////////////
+
+bool Rest_of_maybe_shift_exp() {
+  if ( !Rest_of_maybe_additive_exp() )
+    return false;
+  while ( LS() || RS() )
+    if ( !Maybe_additive_exp() )
+      return false;
+  return true;
+} // Rest_of_maybe_shift_exp()
+
+bool Maybe_shift_exp() {
+  if ( !Maybe_additive_exp() )
+    return false;
+  while ( LS() || RS() )
+    if ( !Maybe_additive_exp() )
+      return false;
+  return true;
+} // Maybe_shift_exp()
+
+// /////////////////////////////////////////////////////////////////////////////
+//                          rest_of_maybe_equality_exp                        //
+// /////////////////////////////////////////////////////////////////////////////
+
+bool Rest_of_maybe_relational_exp() {
+  if ( !Rest_of_maybe_shift_exp() )
+    return false;
+  while ( PeekToken().mToken == "<" || PeekToken().mToken == ">" || LE() || GE() ) {
+    if ( PeekToken().mToken == "<" || PeekToken().mToken == ">" )
+      GetToken();
+    else if ( !Maybe_shift_exp() )
+      return false;
+  } // while
+
+  return true;
+} // Rest_of_maybe_relational_exp()
+
+bool Maybe_relational_exp() {
+  if ( Maybe_shift_exp() )
+    return false;
+  while ( PeekToken().mToken == "<" || PeekToken().mToken == ">" || LE() || GE() ) {
+    if ( PeekToken().mToken == "<" || PeekToken().mToken == ">" )
+      GetToken();
+    else if ( !Maybe_shift_exp() )
+      return false;
+  } // while
+
+  return true;
+} // Maybe_relational_exp()
+
+// /////////////////////////////////////////////////////////////////////////////
+//                          rest_of_maybe_bit_AND_exp                         //
+// /////////////////////////////////////////////////////////////////////////////
+
+bool Rest_of_maybe_equality_exp() {
+  if ( !Rest_of_maybe_relational_exp() )
+    return false;
+  while ( EQ() || NEQ() )
+    if ( !Maybe_relational_exp() )
+      return false;
+  return true;
+} // Rest_of_maybe_equality_exp()
+
+bool Maybe_equality_exp() {
+  if ( !Maybe_relational_exp() )
+    return false;
+  while ( EQ() || NEQ() )
+    if ( !Maybe_relational_exp() )
+      return false;
+  return true;
+} // Maybe_equality_exp()
+
+// /////////////////////////////////////////////////////////////////////////////
+//                         rest_of_maybe_bit_ex_OR_exp                        //
+// /////////////////////////////////////////////////////////////////////////////
+
+bool Rest_of_maybe_bit_AND_exp() {
+  if ( !Rest_of_maybe_equality_exp() )
+    return false;
+  while ( PeekToken().mToken == "&" ) {
+    GetToken();
+    if ( !Maybe_equality_exp() )
+      return false;
+  } // while
+
+  return true;
+} // Rest_of_maybe_bit_AND_exp()
+
+bool Maybe_bit_AND_exp() {
+  if ( !Maybe_equality_exp() )
+    return false;
+  while ( PeekToken().mToken == "&" ) {
+    GetToken();
+    if ( !Maybe_equality_exp() )
+      return false;
+  } // while
+
+  return true;
+} // Maybe_bit_AND_exp()
+
+// /////////////////////////////////////////////////////////////////////////////
+//                          rest_of_maybe_bit_OR_exp                          //
+// /////////////////////////////////////////////////////////////////////////////
+
+bool Rest_of_maybe_bit_ex_OR_exp() {
+  if ( !Rest_of_maybe_bit_AND_exp() )
+    return false;
+  while ( PeekToken().mToken == "^" ) {
+    GetToken();
+    if ( !Maybe_bit_AND_exp() )
+      return false;
+  } // while
+
+  return true;
+} // Rest_of_maybe_bit_ex_OR_exp()
+
+bool Maybe_bit_ex_OR_exp() {
+  if ( !Maybe_bit_AND_exp() )
+    return false;
+  while ( PeekToken().mToken == "^" ) {
+    GetToken();
+    if ( !Maybe_bit_AND_exp() )
+      return false;
+  } // while
+
+  return true;
+} // Maybe_bit_ex_OR_exp()
+
+// /////////////////////////////////////////////////////////////////////////////
+//                       rest_of_maybe_logical_AND_exp                        //
+// /////////////////////////////////////////////////////////////////////////////
+
+bool Rest_of_maybe_bit_OR_exp() {
+  if ( !Rest_of_maybe_bit_ex_OR_exp() )
+    return false;
+  while ( PeekToken().mToken == "|" ) {
+    GetToken();
+    if ( !Maybe_bit_ex_OR_exp() )
+      return false;
+  } // while
+
+  return true;
+} // Rest_of_maybe_bit_OR_exp()
+
+bool Maybe_bit_OR_exp() {
+  if ( !Maybe_bit_ex_OR_exp() )
+    return false;
+  while ( PeekToken().mToken == "|" ) {
+    GetToken();
+    if ( !Maybe_bit_ex_OR_exp() )
+      return false;
+  } // while
+
+  return true;
+} // Maybe_bit_OR_exp()
+
+// /////////////////////////////////////////////////////////////////////////////
+//                        rest_of_maybe_logical_OR_exp                        //
+// /////////////////////////////////////////////////////////////////////////////
+
+bool Rest_of_maybe_logical_AND_exp() {
+  if ( !Rest_of_maybe_bit_OR_exp() )
+    return false;
+  while ( AND() )
+    if ( !Maybe_bit_OR_exp() )
+      return false;
+  return true
+} // Rest_of_maybe_logical_AND_exp()
+
+bool Maybe_logical_AND_exp() {
+  if ( !Maybe_bit_OR_exp() )
+    return false;
+  while ( AND() )
+    if ( !Maybe_bit_OR_exp() )
+      return false;
+  return true;
+} // Maybe_logical_AND_exp()
+
+// /////////////////////////////////////////////////////////////////////////////
+//                             basic_expression                               //
+// /////////////////////////////////////////////////////////////////////////////
+
+bool Rest_of_Identifier_started_basic_exp() {
+  if ( PeekToken().mToken == "[" ) { // 1
+    GetToken();
+    if ( !Expression() )
+      return false;
+    if ( PeekToken().mToken != "]" )
+      return false;
+    GetToken();
+    if ( Assignment_operator() ) {
+      if ( !Basic_expression() )
+        return false;
+    } // if
+    else if ( PP() || MM() ) {
+      if ( !Rest_of_maybe_logical_OR_exp() )
+        return false;
+    } // else if
+    else if ( Rest_of_maybe_logical_OR_exp() ) {
+      // do nothing
+    } // else if
+    else
+      return false;
+  } // if
+  else if ( Assignment_operator() ) { // 2
+    if ( !Basic_expression() )
+      return false;
+  } // else if
+  else if ( PP() || MM() ) { // 3
+    if ( !Rest_of_maybe_logical_OR_exp() )
+      return false;
+  } // else if
+  else if ( Rest_of_maybe_logical_OR_exp() ) { // 4
+    // do nothing
+  } // else if
+  else if ( PeekToken().mToken == "(" ) { // 5
+    GetToken();
+    if ( Actual_parameter_list() ) {
+      // do nothing
+    } // if
+
+    if ( PeekToken().mToken != ")" )
+      return false;
+    GetToken();
+    if ( !Rest_of_maybe_logical_OR_exp() )
+      return false;
+  } // else if
+  else
+    return false;
+
+  return true;
+} // Rest_of_Identifier_started_basic_exp()
+
+bool Rest_of_PPMM_Identifier_started_basic_exp() {
+  if ( PeekToken().mToken == "[" ) {
+    GetToken();
+    if ( !Expression() )
+      return false;
+    if ( PeekToken().mToken != "]" )
+      return false;
+    GetToken();
+  } // if
+
+  if ( !Rest_of_maybe_logical_OR_exp() )
+    return false;
+
+  return true;
+} // Rest_of_PPMM_Identifier_started_basic_exp()
+
+bool Signed_basic_expression() {
+  if ( Identifier() ) {
+    if ( !Rest_of_Identifier_started_signed_basic_exp() )
+      return false;
+  } // if
+  else if ( Constant() ) {
+    if ( !Rest_of_maybe_logical_OR_exp() )
+      return false;
+  } // else if
+  else if ( PeekToken.mToken() == "(" ) {
+    GetToken();
+    if ( !Expression() )
+      return false;
+    if ( PeekToken.mToken() != ")" )
+      return false;
+    GetToken();
+    if ( !Rest_of_maybe_logical_OR_exp() )
+      return false;
+  } // else if
+  else
+    return false;
+
+  return true;
+} // Signed_basic_expression()
+
+bool Sign() {
+  if ( PeekToken().mToken != "+" && PeekToken().mToken != "-" && PeekToken().mToken != "!" )
+    return false;
+  return true;
+} // Sign()
+
+bool Rest_of_maybe_logical_OR_exp() {
+  if ( !Rest_of_maybe_logical_AND_exp() )
+    return false;
+  while ( OR() ) {
+    if ( !Maybe_logical_AND_exp() )
+      return false;
+  } // while
+
+  return true;
+} // Rest_of_maybe_logical_OR_exp()
+
+// /////////////////////////////////////////////////////////////////////////////
+//                                expression                                  //
+// /////////////////////////////////////////////////////////////////////////////
+
+bool Basic_expression() {
+  if ( Identifier() ) {
+    if ( !Rest_of_Identifier_started_basic_exp() )
+      return false;
+  } // if
+  else if ( PP() || MM() ) {
+    if ( !Identifier() )
+      return false;
+    if ( !Rest_of_PPMM_Identifier_started_basic_exp() )
+      return false;
+  } // else if
+  else if ( Sign() ) {
+    while ( Sign() ) {
+      // do nothing
+    } // while
+
+    if ( !Signed_basic_expression() )
+      return false;
+  } // else if
+  else if ( Constant() ) {
+    if ( !Rest_of_maybe_logical_OR_exp() )
+      return false;
+  } // else if
+  else if ( PeekToken().mToken == "(" ) {
+    GetToken();
+    if ( !Expression() )
+      return false;
+    if ( PeekToken().mToken != ")" )
+      return false;
+    GetToken();
+    if ( !Rest_of_maybe_logical_OR_exp() )
+      return false;
+  } // else if
+  else
+    return false;
+
+  return true;
+} // Basic_expression()
+
+bool Rest_of_expression() {
+  if ( PeekToken().mToken == "," ) {
+    GetToken();
+    if ( !Basic_expression() )
+      return false;
+    if ( Rest_of_expression() ) {
+      // do nothing
+    } // if
+  } // if
+  else if ( PeekToken().mToken == "?" ) {
+    GetToken();
+    if ( !Expression() )
+      return false;
+    if ( PeekToken().mToken != ":" )
+      return false;
+    GetToken();
+    if ( !Basic_expression() )
+      return false;
+    if ( Rest_of_expression() ) {
+      // do nothing
+    } // if
+  } // else if
+  else
+    return false;
+
+  return true;
+} // Rest_of_expression()
+
+// /////////////////////////////////////////////////////////////////////////////
+//                                statement                                   //
+// /////////////////////////////////////////////////////////////////////////////
+
+bool Expression() {
+  if ( !Basic_expression() )
+    return false;
+  if ( Rest_of_expression() ) {
+    // do nothing
+  } // if
+
+  return true;
+} // Expression()
+
+// /////////////////////////////////////////////////////////////////////////////
+//                                user_input                                  //
 // /////////////////////////////////////////////////////////////////////////////
 
 bool Definition() {
@@ -455,6 +1264,8 @@ bool Definition() {
     if ( !Function_definition_or_declarators() )
       return false;
   } // else if
+  else
+    return false;
 
   return true;
 } // Definition()
@@ -523,6 +1334,8 @@ bool Statement() {
       return false;
     GetToken();
   } // else if
+  else
+    return false;
 
   return true;
 } // Statement()

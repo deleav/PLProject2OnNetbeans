@@ -139,13 +139,13 @@ rest_of_expression
     | '?' expression ':' basic_expression [ rest_of_expression ]
 
 basic_expression
-    : Identifier rest_of_Identifier_started_basic_expression
-    // | ( PP | MM ) { PP | MM } Identifier rest_of_PPMM_Identifier_started_basic_expression // actually, this is OK
-    | ( PP | MM ) Identifier rest_of_PPMM_Identifier_started_basic_expression    // but let's just use this
+    : Identifier rest_of_Identifier_started_basic_exp
+    // | ( PP | MM ) { PP | MM } Identifier rest_of_PPMM_Identifier_started_basic_exp // actually, this is OK
+    | ( PP | MM ) Identifier rest_of_PPMM_Identifier_started_basic_exp    // but let's just use this
     | sign { sign } signed_basic_expression
     | ( Constant | '(' expression ')' ) rest_of_maybe_logical_OR_exp
 
-rest_of_Identifier_started_basic_exp
+rest_of_Identifier_started_basic_exp // 5 options
     : [ '[' expression ']' ]
       ( assignment_operator basic_expression
         |
@@ -157,11 +157,11 @@ rest_of_PPMM_Identifier_started_basic_exp
     : [ '[' expression ']' ]
       rest_of_maybe_logical_OR_exp
 
-signed_basic_expression
+signed_basic_expression // 3 options
     : Identifier rest_of_Identifier_started_signed_basic_exp
     | ( Constant | '(' expression ')' ) rest_of_maybe_logical_OR_exp
 
-rest_of_Identifier_started_signed_basic_exp
+rest_of_Identifier_started_signed_basic_exp // 4 options
     : [ '[' expression ']' ]
       [ PP | MM ]
       rest_of_maybe_logical_OR_exp
