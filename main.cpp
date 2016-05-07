@@ -291,6 +291,27 @@ bool GetTokenString( string &oneLineString, OneLineToken &oneLineToken, int &ind
   return false;
 } // GetTokenString()
 
+bool GetTokenChar( string &oneLineString, OneLineToken &oneLineToken, int &index, string &aTokenString ) {
+  // PrintNowFunction( "GetTokenChar" );
+  string aCharToString = "";
+  aCharToString += oneLineString[index];
+  if ( index < oneLineString.size() ) {
+    aTokenString += aCharToString;
+    index++;
+    aCharToString = "";
+    aCharToString += oneLineString[index];
+    if ( index < oneLineString.size() && aCharToString == "'" ) {
+      aTokenString += aCharToString;
+      Token token( aTokenString, gAllLineToken.size(), oneLineToken.size() );
+      oneLineToken.push_back( token );
+      return true;
+    } // if
+  } // if
+
+  PrintUnrecognizedToken( aCharToString );
+  return false;
+} // GetTokenChar()
+
 bool SymbolOrRecognizedToken( string oneLineString, OneLineToken &oneLineToken, int &index ) {
   // PrintNowFunction( "SymbolOrRecognizedToken" );
   string aCharToString, aTokenString;
@@ -359,16 +380,16 @@ bool GetOneLineToken() {
       i++;
       GetTokenString( oneLineString, oneLineToken, i, aTokenString );
     } // else if
+    else if ( aCharToString == "'" ) {
+      string aTokenString = aCharToString;
+      i++;
+      if ( !GetTokenChar( oneLineString, oneLineToken, i, aTokenString ) )
+        return false;
+    } // else if
     else if ( aCharToString != " " && aCharToString != "\n" && aCharToString != "\t" ) {
       if ( !SymbolOrRecognizedToken( oneLineString, oneLineToken, i ) )
         return false;
     } // else if
-
-    if ( oneLineToken.size() > 0 &&
-         ( oneLineToken.back().mToken == "quit" || oneLineToken.back().mToken == "QUIT" ) ) {
-      gAllLineToken.push_back( oneLineToken );
-      return true;
-    } // if
   } // for
 
   // PrintOneLineToken( oneLineToken );
