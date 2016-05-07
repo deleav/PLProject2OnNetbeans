@@ -624,7 +624,7 @@ bool ListVariable() {
   cout << ident.mType << " " << ident.mToken;
   if ( ident.mArraySize > 0 )
     cout << "[ " << ident.mArraySize << " ]";
-  cout << ";" << endl;
+  cout << " ;" << endl;
   return true;
 } // ListVariable()
 
