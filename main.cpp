@@ -247,8 +247,8 @@ bool GetNumToken( string oneLineString, OneLineToken &oneLineToken, int &index )
   return false;
 } // GetNumToken()
 
-bool GetIdenToken( string oneLineString, OneLineToken &oneLineToken, int &index ) {
-  // PrintNowFunction( "GetIdenToken" );
+bool GetIdentToken( string oneLineString, OneLineToken &oneLineToken, int &index ) {
+  // PrintNowFunction( "GetIdentToken" );
   string aCharToString, aTokenString;
   for ( ; index < oneLineString.size() ; index++ ) {
     aCharToString = string();
@@ -265,9 +265,9 @@ bool GetIdenToken( string oneLineString, OneLineToken &oneLineToken, int &index 
     } // else
   } // for
 
-  cout << "GetIdenToken Error" << endl;
+  cout << "GetIdentToken Error" << endl;
   return false;
-} // GetIdenToken()
+} // GetIdentToken()
 
 bool GetTokenString( string &oneLineString, OneLineToken &oneLineToken, int &index, string &aTokenString ) {
   // PrintNowFunction( "GetTokenString" );
@@ -376,7 +376,7 @@ bool GetOneLineToken() {
       GetNumToken( oneLineString, oneLineToken, i );
     } // if
     else if ( RecognizedIDTokenHead( aCharToString ) ) {
-      GetIdenToken( oneLineString, oneLineToken, i );
+      GetIdentToken( oneLineString, oneLineToken, i );
     } // else if
     else if ( aCharToString == "\"" ) {
       string aTokenString = aCharToString;
@@ -493,6 +493,7 @@ void PushFunctionToken( Token functionNameToken )  {
 } // PushFunctionToken()
 
 bool IdentHasDeclare( Index &index ) {
+  // PrintNowFunction( "IdentHasDeclare" );
   for ( int i = 0 ; i < gAllIdents.size() ; i++ )
     for ( int j = 0 ; j < gAllIdents[i].size() ; j++ )
       if ( gIdent.mToken == gAllIdents[i][j].mToken ) {
@@ -501,6 +502,7 @@ bool IdentHasDeclare( Index &index ) {
         return true;
       } // if
 
+  gError = gIdent.mToken;
   return false;
 } // IdentHasDeclare()
 
@@ -1029,7 +1031,6 @@ bool Signed_unary_exp() {
   // PrintNowFunction( "Signed_unary_exp" );
   if ( Identifier() ) {
     Index indexOfDeclaredIdent;
-    gError = gIdent.mToken;
     if ( !IdentHasDeclare( indexOfDeclaredIdent ) )
       return false;
     GetToken();
@@ -1074,7 +1075,6 @@ bool Unary_exp() {
     if ( !Identifier() )
       return false;
     Index indexOfDeclaredIdent;
-    gError = gIdent.mToken;
     if ( !IdentHasDeclare( indexOfDeclaredIdent ) )
       return false;
     GetToken();
@@ -1417,7 +1417,6 @@ bool Signed_basic_expression() {
   // PrintNowFunction( "Signed_basic_expression" );
   if ( Identifier() ) {
     Index indexOfDeclaredIdent;
-    gError = gIdent.mToken;
     if ( !IdentHasDeclare( indexOfDeclaredIdent ) )
       return false;
     GetToken();
@@ -1472,7 +1471,6 @@ bool Basic_expression() {
   // PrintNowFunction( "Basic_expression" );
   if ( Identifier() ) {
     Index indexOfDeclaredIdent;
-    gError = gIdent.mToken;
     if ( !IdentHasDeclare( indexOfDeclaredIdent ) )
       return false;
     GetToken();
@@ -1483,7 +1481,6 @@ bool Basic_expression() {
     if ( !Identifier() )
       return false;
     Index indexOfDeclaredIdent;
-    gError = gIdent.mToken;
     if ( !IdentHasDeclare( indexOfDeclaredIdent ) )
       return false;
     GetToken();
@@ -1662,7 +1659,6 @@ bool Statement() {
     if ( !Identifier() )
       return false;
     Index indexOfDeclaredIdent;
-    gError = gIdent.mToken;
     if ( !IdentHasDeclare( indexOfDeclaredIdent ) )
       return false;
     GetToken();
@@ -1671,7 +1667,6 @@ bool Statement() {
       if ( !Identifier() )
         return false;
       Index indexOfDeclaredIdent;
-      gError = gIdent.mToken;
       if ( !IdentHasDeclare( indexOfDeclaredIdent ) )
         return false;
       GetToken();
@@ -1687,7 +1682,6 @@ bool Statement() {
     GetToken();
     if ( Identifier() ) {
       Index indexOfDeclaredIdent;
-      gError = gIdent.mToken;
       if ( !IdentHasDeclare( indexOfDeclaredIdent ) )
         return false;
       GetToken();
@@ -1701,7 +1695,6 @@ bool Statement() {
       GetToken();
       if ( Identifier() ) {
         Index indexOfDeclaredIdent;
-        gError = gIdent.mToken;
         if ( !IdentHasDeclare( indexOfDeclaredIdent ) )
           return false;
         GetToken();
@@ -1755,7 +1748,7 @@ bool Run() {
   cout << "> ";
   while ( !Done() ) {
     if ( Definition() || Statement() ) {
-      // do nothing
+      gError = "";
     } // if
     else {
       if ( gError == "" )
