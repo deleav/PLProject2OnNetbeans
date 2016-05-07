@@ -715,6 +715,7 @@ bool Declaration() {
     return false;
   if ( !Identifier() )
     return false;
+  GetToken();
   gIdents.push_back( gIdent );
   if ( !Rest_of_declarators() )
     return false;
@@ -741,6 +742,7 @@ bool Rest_of_declarators() {
     GetToken();
     if ( !Identifier() )
       return false;
+    GetToken();
     gIdents.push_back( gIdent );
     if ( PeekToken().mToken == "[" ) {
       GetToken();
@@ -785,6 +787,7 @@ bool Formal_parameter_list() {
     GetToken();
   if ( !Identifier() )
     return false;
+  GetToken();
   gIdents.push_back( gIdent );
   if ( PeekToken().mToken == "[" ) {
     GetToken();
@@ -833,7 +836,7 @@ bool Identifier() {
   aCharToString += mToken[0];
   if ( !IsEnChar( aCharToString ) || IsTable1( mToken ) || IsTable2( mToken ) || IsTable3( mToken ) )
     return false;
-  gIdent = GetToken();
+  gIdent = mToken;
   return true;
 } // Identifier()
 
@@ -1029,6 +1032,7 @@ bool Signed_unary_exp() {
     gError = gIdent.mToken;
     if ( !IdentHasDeclare( indexOfDeclaredIdent ) )
       return false;
+    GetToken();
     if ( Rest_of_Identifier_started_unary_exp() ) {
       // do nothing
     } // if
@@ -1073,6 +1077,7 @@ bool Unary_exp() {
     gError = gIdent.mToken;
     if ( !IdentHasDeclare( indexOfDeclaredIdent ) )
       return false;
+    GetToken();
     if ( PeekToken().mToken == "[" ) {
       GetToken();
       if ( !Expression() )
@@ -1415,6 +1420,7 @@ bool Signed_basic_expression() {
     gError = gIdent.mToken;
     if ( !IdentHasDeclare( indexOfDeclaredIdent ) )
       return false;
+    GetToken();
     if ( !Rest_of_Identifier_started_signed_basic_exp() )
       return false;
   } // if
@@ -1469,6 +1475,7 @@ bool Basic_expression() {
     gError = gIdent.mToken;
     if ( !IdentHasDeclare( indexOfDeclaredIdent ) )
       return false;
+    GetToken();
     if ( !Rest_of_Identifier_started_basic_exp() )
       return false;
   } // if
@@ -1479,6 +1486,7 @@ bool Basic_expression() {
     gError = gIdent.mToken;
     if ( !IdentHasDeclare( indexOfDeclaredIdent ) )
       return false;
+    GetToken();
     if ( !Rest_of_PPMM_Identifier_started_basic_exp() )
       return false;
   } // else if
@@ -1564,12 +1572,14 @@ bool Definition() {
   if ( VOID() ) {
     if ( !Identifier() )
       return false;
+    GetToken();
     if ( !Function_definition_without_ID() )
       return false;
   } // if
   else if ( Type_specifier() ) {
     if ( !Identifier() )
       return false;
+    GetToken();
     gIdents.push_back( gIdent );
     if ( !Function_definition_or_declarators() )
       return false;
@@ -1655,6 +1665,7 @@ bool Statement() {
     gError = gIdent.mToken;
     if ( !IdentHasDeclare( indexOfDeclaredIdent ) )
       return false;
+    GetToken();
     while ( PeekToken().mToken == ">>" ) {
       GetToken();
       if ( !Identifier() )
@@ -1663,6 +1674,7 @@ bool Statement() {
       gError = gIdent.mToken;
       if ( !IdentHasDeclare( indexOfDeclaredIdent ) )
         return false;
+      GetToken();
     } // while
 
     if ( PeekToken().mToken != ";" )
@@ -1678,6 +1690,7 @@ bool Statement() {
       gError = gIdent.mToken;
       if ( !IdentHasDeclare( indexOfDeclaredIdent ) )
         return false;
+      GetToken();
     } // if
     else if ( Constant() ) {
       // do nothing
@@ -1691,6 +1704,7 @@ bool Statement() {
         gError = gIdent.mToken;
         if ( !IdentHasDeclare( indexOfDeclaredIdent ) )
           return false;
+        GetToken();
       } // if
       else if ( Constant() ) {
         // do nothing
