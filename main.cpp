@@ -158,7 +158,7 @@ Index gIndex; // index of gAllLineToken
 Index gIndexOfFunctionStart;
 string gType;
 string gError;
-bool gInCompound = false;
+vector<bool> gInCompound;
 int gErrorLine = 0;
 
 // /////////////////////////////////////////////////////////////////////////////
@@ -541,12 +541,12 @@ void DeclareIdents() {
     gIdent = gIdents[i];
     if ( IdentHasDeclare( indexOfDeclaredIdent ) ) {
       gAllIdents[indexOfDeclaredIdent.mX][indexOfDeclaredIdent.mY] = gIdent;
-      if ( !gInCompound )
+      if ( gInCompound.size() == 0 )
         cout << "New definition of " << gIdent.mToken << " entered ..." << endl;
     } // if
     else {
       gAllIdents.back().push_back( gIdent );
-      if ( !gInCompound )
+      if ( gInCompound.size() == 0 )
         cout << "Definition of " << gIdent.mToken << " entered ..." << endl;
     } // else
   } // for
@@ -923,7 +923,7 @@ bool Compound_statement() {
   GetToken();
   OneLineIdent idents;
   gAllIdents.push_back( idents );
-  gInCompound = true;
+  gInCompound.push_back( true );
   while ( Declaration() || Statement() ) {
     // do nothing
   } // while
@@ -932,7 +932,7 @@ bool Compound_statement() {
     return false;
   GetToken();
   gAllIdents.pop_back();
-  gInCompound = false;
+  gInCompound.pop_back();
   return true;
 } // Compound_statement()
 
@@ -1724,11 +1724,13 @@ bool Statement() {
     if ( PeekToken().mToken != ")" )
       return false;
     GetToken();
+    gInCompound.push_back( true );
     if ( !Statement() )
       return false;
     if ( ELSE() ) // 0 or 1
       if ( !Statement() )
         return false;
+    gInCompound.pop_back();
   } // if
   else if ( WHILE() ) {
     if ( PeekToken().mToken != "(" )
@@ -1739,12 +1741,16 @@ bool Statement() {
     if ( PeekToken().mToken != ")" )
       return false;
     GetToken();
+    gInCompound.push_back( true );
     if ( !Statement() )
       return false;
+    gInCompound.pop_back();
   } // else if
   else if ( DO() ) {
+    gInCompound.push_back( true );
     if ( !Statement() )
       return false;
+    gInCompound.pop_back();
     if ( !WHILE() )
       return false;
     if ( PeekToken().mToken != "(" )
@@ -1826,7 +1832,7 @@ bool Statement() {
   else
     return false;
 
-  if ( !gInCompound )
+  if ( gInCompound.size() == 0 )
     cout << "Statement executed ..." << endl;
   return true;
 } // Statement()
@@ -1868,6 +1874,7 @@ bool Run() {
         gError = PeekToken().mToken;
       PrintUnexpectedUndeclaredToken( gError );
       gError = "";
+      gInCompound.resize( 0 );
       AbortCurrentLineToken();
     } // else
 
