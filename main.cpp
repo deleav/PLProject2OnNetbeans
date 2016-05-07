@@ -57,12 +57,12 @@ class FunctionToken {
 public:
   string mToken;
   vector<Token> mFunctionToken;
-  int paramNum;
+  int mParamsNum;
 
   FunctionToken( string name, vector<Token> functionToken ) {
     mToken = name;
     mFunctionToken = functionToken;
-    paramNum = 0;
+    mParamsNum = 0;
   } // FunctionToken()
 }; // class FunctionToken
 
@@ -87,7 +87,7 @@ public:
     mX = token.mX;
     mY = token.mY;
     mType = type;
-  } // Identifier()
+  } // Ident()
 
   Ident( Token token, string type, int arraySize ) {
     mToken = token.mToken;
@@ -95,7 +95,7 @@ public:
     mY = token.mY;
     mType = type;
     mArraySize = arraySize;
-  } // Identifier()
+  } // Ident()
 }; // class Ident
 
 class Table {
