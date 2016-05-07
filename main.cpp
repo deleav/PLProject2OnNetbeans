@@ -137,6 +137,7 @@ Index gIndex; // index of gAllLineToken
 Index gIndexOfFunctionStart;
 string gError;
 bool gInCompound = false;
+int gErrorLine = 0;
 
 // /////////////////////////////////////////////////////////////////////////////
 //                                 IsOO                                       //
@@ -197,11 +198,11 @@ void PrintNowFunction( string str ) {
 } // PrintNowFunction()
 
 void PrintUnexpectedUndeclaredToken( string str ) {
-  cout << "line " << gAllLineToken.size() << " : syntax error when token is '" + str + "'" << endl;
+  cout << "line " << gErrorLine << " : syntax error when token is '" + str + "'" << endl;
 } // PrintUnexpectedUndeclaredToken()
 
 void PrintUnrecognizedToken( string str ) {
-  cout << "line " << gAllLineToken.size() + 1 << " : syntax error when input char is '" + str + "'" << endl;
+  cout << "line " << gErrorLine + 1 << " : syntax error when input char is '" + str + "'" << endl;
 } // PrintUnrecognizedToken()
 
 void PrintErrorMessage() {
@@ -396,6 +397,7 @@ bool GetOneLineToken() {
 
   // PrintOneLineToken( oneLineToken );
   gAllLineToken.push_back( oneLineToken );
+  gErrorLine++;
   return true;
 } // GetOneLineToken()
 
@@ -1749,6 +1751,7 @@ bool Run() {
       AbortCurrentLineToken();
     } // else
 
+    gErrorLine = 0;
     gIdents = OneLineToken();
     cout << "> ";
   } // while
