@@ -55,29 +55,48 @@ public:
 
 class FunctionToken {
 public:
-  Token mToken;
+  string mToken;
   vector<Token> mFunctionToken;
+  int paramNum;
 
-  FunctionToken( Token token, vector<Token> functionToken ) {
-    mToken = token;
+  FunctionToken( string name, vector<Token> functionToken ) {
+    mToken = name;
     mFunctionToken = functionToken;
+    paramNum = 0;
   } // FunctionToken()
 }; // class FunctionToken
 
-// class Identifier {
-// public:
-//   string mToken;
-//   float mValue;
-//
-//   Identifier() {
-//     mValue = 0;
-//   } // Identifier()
-//
-//   Identifier( string token, float value ) {
-//     mToken = token;
-//     mValue = value;
-//   } // Identifier()
-// }; // class Identifier
+class Ident {
+public:
+  string mToken;
+  string mType;
+  int mX;
+  int mY;
+  int mArraySize;
+
+  Ident() {
+    mToken = "";
+    mType = "";
+    mX = 0;
+    mY = 0;
+    mArraySize = 0;
+  } // Ident()
+
+  Ident( Token token, string type ) {
+    mToken = token.mToken;
+    mX = token.mX;
+    mY = token.mY;
+    mType = type;
+  } // Identifier()
+
+  Ident( Token token, string type, int arraySize ) {
+    mToken = token.mToken;
+    mX = token.mX;
+    mY = token.mY;
+    mType = type;
+    mArraySize = arraySize;
+  } // Identifier()
+}; // class Ident
 
 class Table {
 public:
@@ -127,14 +146,17 @@ private:
 // /////////////////////////////////////////////////////////////////////////////
 
 typedef vector<Token> OneLineToken;
-Token gIdent;
-OneLineToken gIdents;
-vector<OneLineToken> gAllIdents;
+typedef vector<Ident> OneLineIdent;
+Token gConstent;
+Ident gIdent;
+OneLineIdent gIdents;
+vector<OneLineIdent> gAllIdents;
 vector<OneLineToken> gAllLineToken;
 vector<FunctionToken> gAllFunctionToken;
 Table gTable;
 Index gIndex; // index of gAllLineToken
 Index gIndexOfFunctionStart;
+string gType;
 string gError;
 bool gInCompound = false;
 int gErrorLine = 0;
@@ -177,6 +199,12 @@ bool IsEnChar( string charStr ) {
     return true;
   return false;
 } // IsEnChar()
+
+bool IsString( string str ) {
+  if ( str.length() > 1 && str[0] == '"' && str[str.length()-1] == '"' )
+    return true;
+  return false;
+} // IsString()
 
 bool RecognizedIDTokenHead( string charStr ) {
   if ( charStr == "_" || IsEnChar( charStr ) )
@@ -476,7 +504,7 @@ bool Basic_expression() ;
 bool Rest_of_maybe_logical_OR_exp() ;
 bool Sign() ;
 
-void PushFunctionToken( Token functionNameToken )  {
+void PushFunctionToken( string functionName )  {
   OneLineToken functionToken;
   int x = gIndexOfFunctionStart.mX, y = gIndexOfFunctionStart.mY;
   for ( int i = x ; i < gIndex.mX ; i++ ) {
@@ -487,7 +515,7 @@ void PushFunctionToken( Token functionNameToken )  {
 
   for ( int j = 0 ; j < gIndex.mY ; j++ )
     functionToken.push_back( gAllLineToken[gIndex.mX][j] );
-  FunctionToken function = FunctionToken( functionNameToken, functionToken );
+  FunctionToken function = FunctionToken( functionName, functionToken );
   gAllFunctionToken.push_back( function );
   gIndexOfFunctionStart = Index();
 } // PushFunctionToken()
@@ -521,7 +549,71 @@ void DeclareIdents() {
         cout << "Definition of " << gIdent.mToken << " entered ..." << endl;
     } // else
   } // for
+
+  gType = "";
 } // DeclareIdents()
+
+bool FindVariable( string identName, Ident &ident ) {
+  for ( int i = 0 ; i < gAllIdents.size() ; i++ )
+    for ( int j = 0 ; j < gAllIdents[i].size() ; j++ )
+      if ( identName == gAllIdents[i][j].mToken ) {
+        ident = gAllIdents[i][j];
+        return true;
+      } // if
+
+  return false;
+} // FindVariable()
+
+bool ListAllVariables() {
+  // PrintNowFunction( "ListAllVariables" );
+  if ( PeekToken().mToken != "ListAllVariables" )
+    return false;
+  GetToken();
+  if ( PeekToken().mToken != "(" )
+    return false;
+  GetToken();
+  if ( PeekToken().mToken != ")" )
+    return false;
+  GetToken();
+  if ( PeekToken().mToken != ";" )
+    return false;
+  GetToken();
+  for ( int i = 0 ; i < gAllIdents.size() ; i++ )
+    for ( int j = 0 ; j < gAllIdents[i].size() ; j++ )
+      cout << gAllIdents[i][j].mToken << endl;
+  return true;
+} // ListAllVariables()
+
+bool ListVariable() {
+  // PrintNowFunction( "ListVariable" );
+  if ( PeekToken().mToken != "ListVariable" )
+    return false;
+  GetToken();
+  if ( PeekToken().mToken != "(" )
+    return false;
+  GetToken();
+  if ( !IsString( PeekToken().mToken ) )
+    return false;
+  string str = GetToken().mToken;
+  if ( PeekToken().mToken != ")" )
+    return false;
+  GetToken();
+  if ( PeekToken().mToken != ";" )
+    return false;
+  GetToken();
+
+  if ( str.length() == 2 )
+    str = "";
+  else
+    str = str.substr( 1, str.length() - 2 );
+  Ident ident;
+  FindVariable( str, ident );
+  cout << ident.mType << " " << ident.mToken;
+  if ( ident.mArraySize > 0 )
+    cout << "[ " << ident.mArraySize << " ]";
+  cout << endl;
+  return true;
+} // ListVariable()
 
 bool CIN() {
   // PrintNowFunction( "CIN" );
@@ -735,6 +827,7 @@ bool Rest_of_declarators() {
     GetToken();
     if ( !Constant() )
       return false;
+    gIdents[gIdents.size()-1].mArraySize = atoi( gConstent.mToken.c_str() );
     if ( PeekToken().mToken != "]" )
       return false;
     GetToken();
@@ -750,6 +843,7 @@ bool Rest_of_declarators() {
       GetToken();
       if ( !Constant() )
         return false;
+      gIdents[gIdents.size()-1].mArraySize = atoi( gConstent.mToken.c_str() );
       if ( PeekToken().mToken != "]" )
         return false;
       GetToken();
@@ -773,7 +867,7 @@ bool Constant() {
   aCharToString += mToken[0];
   if ( IsEnChar( aCharToString ) || IsTable1( mToken ) || IsTable2( mToken ) || IsTable3( mToken ) )
     return false;
-  GetToken();
+  gConstent = GetToken();
   return true;
 } // Constant()
 
@@ -795,6 +889,7 @@ bool Formal_parameter_list() {
     GetToken();
     if ( !Constant() )
       return false;
+    gIdents[gIdents.size()-1].mArraySize = atoi( gConstent.mToken.c_str() );
     if ( PeekToken().mToken != "]" )
       return false;
     GetToken();
@@ -813,7 +908,7 @@ bool Compound_statement() {
   if ( PeekToken().mToken != "{" )
     return false;
   GetToken();
-  OneLineToken idents;
+  OneLineIdent idents;
   gAllIdents.push_back( idents );
   gInCompound = true;
   while ( Declaration() || Statement() ) {
@@ -838,13 +933,13 @@ bool Identifier() {
   aCharToString += mToken[0];
   if ( !IsEnChar( aCharToString ) || IsTable1( mToken ) || IsTable2( mToken ) || IsTable3( mToken ) )
     return false;
-  gIdent = mToken;
+  gIdent = Ident( PeekToken(), gType );
   return true;
 } // Identifier()
 
 bool Function_definition_without_ID() {
   // PrintNowFunction( "Function_definition_without_ID" );
-  Token functionNameToken = gIdent;
+  string functionName = gIdent.mToken;
   if ( PeekToken().mToken != "(" )
     return false;
   GetToken();
@@ -858,7 +953,7 @@ bool Function_definition_without_ID() {
   GetToken();
   if ( !Compound_statement() )
     return false;
-  PushFunctionToken( functionNameToken );
+  PushFunctionToken( functionName );
   return true;
 } // Function_definition_without_ID()
 
@@ -866,8 +961,7 @@ bool Type_specifier() {
   // PrintNowFunction( "Type_specifier" );
   if ( !IsTable1( PeekToken().mToken ) )
     return false;
-  GetToken();
-
+  gType = GetToken().mToken;
   return true;
 } // Type_specifier()
 
@@ -1710,6 +1804,12 @@ bool Statement() {
       return false;
     GetToken();
   } // else if
+  else if ( ListAllVariables() ) {
+    // do nothing
+  } // else if
+  else if ( ListVariable() ) {
+    // do nothing
+  } // else if
   else
     return false;
 
@@ -1742,7 +1842,7 @@ bool Done() {
 
 bool Run() {
   // PrintNowFunction( "Run" );
-  OneLineToken idents;
+  OneLineIdent idents;
   gAllIdents.push_back( idents );
 
   cout << "> ";
@@ -1759,7 +1859,7 @@ bool Run() {
     } // else
 
     gErrorLine = 0;
-    gIdents = OneLineToken();
+    gIdents = OneLineIdent();
     cout << "> ";
   } // while
 
