@@ -284,6 +284,7 @@ bool GetTokenString( string &oneLineString, OneLineToken &oneLineToken, int &ind
     return GetTokenString( oneLineString, oneLineToken, index, aTokenString );
   } // if
   else if ( aCharToString == "\"" ) { // get string
+    index--;
     Token token( aTokenString, gAllLineToken.size(), oneLineToken.size() );
     oneLineToken.push_back( token );
     return true;
@@ -444,7 +445,7 @@ Token PeekToken() {
     token = PeekCurrentToken();
   } // if
 
-  // cout << token.mToken << endl;
+  // cout << "Peek " << token.mToken << endl;
   return token;
 } // PeekToken()
 
@@ -455,7 +456,7 @@ Token GetToken() {
     token = GetCurrentToken();
   } // if
 
-  // cout << token.mToken << endl;
+  // cout << "Get " << token.mToken << endl;
   return token;
 } // GetToken()
 
@@ -1670,19 +1671,29 @@ bool Statement() {
     if ( PeekToken().mToken != "<<" )
       return false;
     GetToken();
-    if ( !Identifier() )
-      return false;
-    Index indexOfDeclaredIdent;
-    gError = gIdent.mToken;
-    if ( !IdentHasDeclare( indexOfDeclaredIdent ) )
-      return false;
-    while ( PeekToken().mToken == "<<" ) {
-      GetToken();
-      if ( !Identifier() )
-        return false;
+    if ( Identifier() ) {
       Index indexOfDeclaredIdent;
       gError = gIdent.mToken;
       if ( !IdentHasDeclare( indexOfDeclaredIdent ) )
+        return false;
+    } // if
+    else if ( Constant() ) {
+      // do nothing
+    } // else if
+    else
+      return false;
+    while ( PeekToken().mToken == "<<" || PeekToken().mToken == "+" ) {
+      GetToken();
+      if ( Identifier() ) {
+        Index indexOfDeclaredIdent;
+        gError = gIdent.mToken;
+        if ( !IdentHasDeclare( indexOfDeclaredIdent ) )
+          return false;
+      } // if
+      else if ( Constant() ) {
+        // do nothing
+      } // else if
+      else
         return false;
     } // while
 
