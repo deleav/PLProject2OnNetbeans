@@ -1699,11 +1699,6 @@ bool Statement() {
   if ( PeekToken().mToken == ";" ) {
     GetToken();
   } // if
-  else if ( Expression() ) {
-    if ( PeekToken().mToken != ";" )
-      return false;
-    GetToken();
-  } // else if
   else if ( RETURN() ) {
     if ( Expression() ) // 0 or 1
       if ( PeekToken().mToken != ";" )
@@ -1828,6 +1823,11 @@ bool Statement() {
   } // else if
   else if ( ListVariable() ) {
     // do nothing
+  } // else if
+  else if ( Expression() ) {
+    if ( PeekToken().mToken != ";" )
+      return false;
+    GetToken();
   } // else if
   else
     return false;
