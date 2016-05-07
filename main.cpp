@@ -813,7 +813,7 @@ bool Compound_statement() {
   gInCompound = true;
   while ( Declaration() || Statement() ) {
     // do nothing
-  } // if
+  } // while
 
   if ( PeekToken().mToken != "}" )
     return false;
