@@ -158,6 +158,7 @@ Index gIndex; // index of gAllLineToken
 Index gIndexOfFunctionStart;
 string gType;
 string gError;
+bool gAfterIf = false;
 vector<bool> gInCompound;
 int gErrorLine = 0;
 
@@ -1726,6 +1727,7 @@ bool Statement() {
       if ( !Statement() )
         return false;
     gInCompound.pop_back();
+    gAfterIf = true;
   } // if
   else if ( WHILE() ) {
     if ( PeekToken().mToken != "(" )
@@ -1878,7 +1880,11 @@ bool Run() {
       AbortCurrentLineToken();
     } // else
 
-    gErrorLine = 0;
+    if ( !gAfterIf )
+      gErrorLine = 0;
+    else
+      gErrorLine = 1;
+    gAfterIf = false;
     gIdents = OneLineIdent();
     cout << "> ";
   } // while
