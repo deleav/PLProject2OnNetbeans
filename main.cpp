@@ -136,6 +136,7 @@ Table gTable;
 Index gIndex; // index of gAllLineToken
 Index gIndexOfFunctionStart;
 string gError;
+bool gInCompound = false;
 
 // /////////////////////////////////////////////////////////////////////////////
 //                                 IsOO                                       //
@@ -506,11 +507,13 @@ void DeclareIdents() {
     gIdent = gIdents[i];
     if ( IdentHasDeclare( indexOfDeclaredIdent ) ) {
       gAllIdents[indexOfDeclaredIdent.mX][indexOfDeclaredIdent.mY] = gIdent;
-      cout << "New definition of " << gIdent.mToken << " entered ..." << endl;
+      if ( !gInCompound )
+        cout << "New definition of " << gIdent.mToken << " entered ..." << endl;
     } // if
     else {
       gAllIdents.back().push_back( gIdent );
-      cout << "Definition of " << gIdent.mToken << " entered ..." << endl;
+      if ( !gInCompound )
+        cout << "Definition of " << gIdent.mToken << " entered ..." << endl;
     } // else
   } // for
 } // DeclareIdents()
@@ -709,6 +712,7 @@ bool Declaration() {
     return false;
   if ( !Identifier() )
     return false;
+  gIdents.push_back( gIdent );
   if ( !Rest_of_declarators() )
     return false;
 
@@ -801,14 +805,18 @@ bool Compound_statement() {
   if ( PeekToken().mToken != "{" )
     return false;
   GetToken();
-  if ( Declaration() || Statement() ) {
+  OneLineToken idents;
+  gAllIdents.push_back( idents );
+  gInCompound = true;
+  while ( Declaration() || Statement() ) {
     // do nothing
   } // if
 
   if ( PeekToken().mToken != "}" )
     return false;
   GetToken();
-
+  gAllIdents.pop_back();
+  gInCompound = false;
   return true;
 } // Compound_statement()
 
@@ -829,8 +837,6 @@ bool Identifier() {
 bool Function_definition_without_ID() {
   // PrintNowFunction( "Function_definition_without_ID" );
   Token functionNameToken = gIdent;
-  OneLineToken idents;
-  gAllIdents.push_back( idents );
   if ( PeekToken().mToken != "(" )
     return false;
   GetToken();
@@ -845,7 +851,6 @@ bool Function_definition_without_ID() {
   if ( !Compound_statement() )
     return false;
   PushFunctionToken( functionNameToken );
-  gAllIdents.pop_back();
   return true;
 } // Function_definition_without_ID()
 
@@ -1688,7 +1693,8 @@ bool Statement() {
   else
     return false;
 
-  cout << "Statement executed ..." << endl;
+  if ( !gInCompound )
+    cout << "Statement executed ..." << endl;
   return true;
 } // Statement()
 
