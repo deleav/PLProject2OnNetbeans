@@ -158,7 +158,7 @@ Index gIndex; // index of gAllLineToken
 Index gIndexOfFunctionStart;
 string gType;
 string gError;
-bool gAfterIf = false;
+bool gIsFirstLine = false;
 vector<bool> gInCompound;
 int gErrorLine = 0;
 
@@ -231,7 +231,7 @@ void PrintUnexpectedUndeclaredToken( string str ) {
 } // PrintUnexpectedUndeclaredToken()
 
 void PrintUnrecognizedToken( string str ) {
-  cout << "line " << gErrorLine + 1 << " : syntax error when input char is '" + str + "'" << endl;
+  cout << "line " << gErrorLine << " : syntax error when input char is '" + str + "'" << endl;
 } // PrintUnrecognizedToken()
 
 void PrintErrorMessage() {
@@ -426,7 +426,10 @@ bool GetOneLineToken() {
 
   // PrintOneLineToken( oneLineToken );
   gAllLineToken.push_back( oneLineToken );
-  gErrorLine++;
+  if ( !gIsFirstLine )
+    gErrorLine++;
+  else
+    gIsFirstLine = false;
   return true;
 } // GetOneLineToken()
 
@@ -1727,7 +1730,6 @@ bool Statement() {
       if ( !Statement() )
         return false;
     gInCompound.pop_back();
-    gAfterIf = true;
   } // if
   else if ( WHILE() ) {
     if ( PeekToken().mToken != "(" )
@@ -1880,11 +1882,8 @@ bool Run() {
       AbortCurrentLineToken();
     } // else
 
-    if ( !gAfterIf )
-      gErrorLine = 0;
-    else
-      gErrorLine = 1;
-    gAfterIf = false;
+    gErrorLine = 1;
+    gIsFirstLine = true;
     gIdents = OneLineIdent();
     cout << "> ";
   } // while
