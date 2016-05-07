@@ -503,6 +503,7 @@ bool Expression() ;
 bool Basic_expression() ;
 bool Rest_of_maybe_logical_OR_exp() ;
 bool Sign() ;
+void SortAllIdents() ;
 
 void PushFunctionToken( string functionName )  {
   OneLineToken functionToken;
@@ -550,6 +551,7 @@ void DeclareIdents() {
     } // else
   } // for
 
+  SortAllIdents();
   gType = "";
 } // DeclareIdents()
 
@@ -563,6 +565,17 @@ bool FindVariable( string identName, Ident &ident ) {
 
   return false;
 } // FindVariable()
+
+void SortAllIdents() {
+  for ( int i = 0 ; i < gAllIdents.size() ; i++ )
+    for ( int j = 0 ; j < gAllIdents[i].size() ; j++ )
+      for ( int k = j + 1 ; k < gAllIdents[i].size() ; k++ )
+        if ( gAllIdents[i][j].mToken > gAllIdents[i][k].mToken ) {
+          Ident tempIdent = gAllIdents[i][j];
+          gAllIdents[i][j] = gAllIdents[i][k];
+          gAllIdents[i][k] = tempIdent;
+        } // if
+} // SortAllIdents()
 
 bool ListAllVariables() {
   // PrintNowFunction( "ListAllVariables" );
@@ -611,7 +624,7 @@ bool ListVariable() {
   cout << ident.mType << " " << ident.mToken;
   if ( ident.mArraySize > 0 )
     cout << "[ " << ident.mArraySize << " ]";
-  cout << endl;
+  cout << ";" << endl;
   return true;
 } // ListVariable()
 
