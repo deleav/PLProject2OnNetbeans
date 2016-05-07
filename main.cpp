@@ -50,7 +50,7 @@ public:
   Index( int x, int y ) {
     mX = x;
     mY = y;
-  } // Index
+  } // Index()
 }; // class Index
 
 class FunctionToken {
@@ -349,7 +349,7 @@ bool GetOneLineToken() {
     aCharToString = string();
     aCharToString += oneLineString[i];
     if ( IsANumChar( aCharToString ) || aCharToString == "." ) {
-         GetNumToken( oneLineString, oneLineToken, i );
+      GetNumToken( oneLineString, oneLineToken, i );
     } // if
     else if ( RecognizedIDTokenHead( aCharToString ) ) {
       GetIdenToken( oneLineString, oneLineToken, i );
@@ -441,15 +441,15 @@ Token GetToken() {
 //                               sub function                                 //
 // /////////////////////////////////////////////////////////////////////////////
 
-bool Type_specifier();
-bool Identifier();
-bool Rest_of_declarators();
-bool Constant();
-bool Statement();
-bool Expression();
-bool Basic_expression();
-bool Rest_of_maybe_logical_OR_exp();
-bool Sign();
+bool Type_specifier() ;
+bool Identifier() ;
+bool Rest_of_declarators() ;
+bool Constant() ;
+bool Statement() ;
+bool Expression() ;
+bool Basic_expression() ;
+bool Rest_of_maybe_logical_OR_exp() ;
+bool Sign() ;
 
 void PushFunctionToken( Token functionNameToken )  {
   OneLineToken functionToken;
@@ -459,6 +459,7 @@ void PushFunctionToken( Token functionNameToken )  {
       functionToken.push_back( gAllLineToken[i][j] );
     y = 0;
   } // for
+
   for ( int j = 0 ; j < gIndex.mY ; j++ )
     functionToken.push_back( gAllLineToken[gIndex.mX][j] );
   FunctionToken function = FunctionToken( functionNameToken, functionToken );
@@ -474,6 +475,7 @@ bool IdentHasDeclare( Index &index ) {
         index.mY = j;
         return true;
       } // if
+
   return false;
 } // IdentHasDeclare()
 
@@ -815,6 +817,7 @@ bool Function_definition_without_ID() {
     if ( gIdents.size() > 0 )
       DeclareIdents();
   } // if
+
   if ( PeekToken().mToken != ")" )
     return false;
   GetToken();
@@ -1695,7 +1698,6 @@ bool Run() {
   OneLineToken idents;
   gAllIdents.push_back( idents );
 
-  cout << "Our-C running ..." << endl;
   cout << "> ";
   while ( !Done() ) {
     if ( Definition() || Statement() ) {
@@ -1718,7 +1720,7 @@ bool Run() {
 
 int main() {
   string e, testNum;
-  cout << "Program starts..." << endl;
+  cout << "Our-C running ..." << endl;
   char *str1 = new char[ 100 ];
   cin.getline( str1, 100 );
   testNum = str1;
